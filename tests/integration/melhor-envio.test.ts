@@ -66,7 +66,7 @@ describe("cotação", () => {
       ["me_2", 6120, 2, 3, "Correios"],
     ]);
     const req = me.requests.find((r) => r.path === "/api/v2/me/shipment/calculate")!;
-    expect(req.headers["user-agent"]).toBe("Oculos Meta Store Testes (dev@example.com)");
+    expect(req.headers["user-agent"]).toBe("Visio Store Testes (dev@example.com)");
     expect(req.body).toMatchObject({ from: { postal_code: "01310100" }, to: { postal_code: "20040020" } });
     // Unidades da documentação: cm, kg, reais.
     expect((req.body as { products: unknown[] }).products[0]).toMatchObject({ width: 16, height: 8, length: 20, weight: 0.25, insurance_value: 500, quantity: 2 });

@@ -58,7 +58,7 @@ function headers(token?: string): Record<string, string> {
   return {
     Accept: "application/json",
     "Content-Type": "application/json",
-    "User-Agent": env().MELHORENVIO_USER_AGENT ?? "Oculos Meta Store",
+    "User-Agent": env().MELHORENVIO_USER_AGENT ?? "Visio Store",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }

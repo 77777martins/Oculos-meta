@@ -18,7 +18,7 @@ export default async function HomePage() {
       <section className="relative isolate overflow-hidden bg-brand-950 text-white">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_80%_at_80%_20%,rgb(59_102_245/0.45),transparent_60%),radial-gradient(50%_60%_at_10%_90%,rgb(37_71_234/0.35),transparent_60%)]" />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgb(255_255_255/0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.04)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
-        <div className="container-page grid items-center gap-12 py-20 lg:grid-cols-2 lg:py-28">
+        <div className="container-page grid items-center gap-8 py-10 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:py-28">
           <div className="animate-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-brand-100 backdrop-blur">
               <Sparkles className="size-3.5" aria-hidden /> Tecnologia que você veste
@@ -54,7 +54,8 @@ export default async function HomePage() {
               ))}
             </dl>
           </div>
-          <div className="relative mx-auto w-full max-w-xl animate-fade-up [animation-delay:150ms]">
+          {/* No celular a arte vem primeiro (visível sem rolar); no desktop fica à direita. */}
+          <div className="relative order-first mx-auto w-full max-w-md animate-fade-up [animation-delay:150ms] lg:order-none lg:max-w-xl">
             <div className="absolute inset-8 -z-10 rounded-full bg-brand-500/30 blur-3xl" />
             {banner?.imageUrl ? (
               <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] ring-1 ring-white/10">

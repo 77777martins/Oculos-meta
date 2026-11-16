@@ -1,4 +1,4 @@
-# Óculos Meta Store
+# Visio Store
 
 E-commerce completo de óculos inteligentes (Ray-Ban Meta e outros modelos): loja, carrinho, checkout, **pagamentos reais via Mercado Pago (PIX, cartão e boleto)**, área do cliente, painel administrativo, controle de estoque, LGPD e segurança alinhada à OWASP.
 

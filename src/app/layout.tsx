@@ -12,10 +12,10 @@ const appUrl = process.env.APP_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  title: { default: "Óculos Meta Store — Óculos inteligentes", template: "%s | Óculos Meta Store" },
+  title: { default: "Visio Store — Óculos inteligentes", template: "%s | Visio Store" },
   description: "Óculos inteligentes Ray-Ban Meta e outros modelos com compra segura, PIX, cartão em até 12x e entrega rastreada.",
-  applicationName: "Óculos Meta Store",
-  openGraph: { type: "website", locale: "pt_BR", siteName: "Óculos Meta Store", url: appUrl },
+  applicationName: "Visio Store",
+  openGraph: { type: "website", locale: "pt_BR", siteName: "Visio Store", url: appUrl },
   twitter: { card: "summary_large_image" },
   robots: process.env.DEMO_MODE === "true" ? { index: false, follow: false } : { index: true, follow: true },
   formatDetection: { telephone: false },

@@ -15,7 +15,7 @@ Object.assign(process.env, {
   MELHORENVIO_CLIENT_ID: "4242",
   MELHORENVIO_CLIENT_SECRET: "test-me-secret",
   MELHORENVIO_ENV: "sandbox",
-  MELHORENVIO_USER_AGENT: "Oculos Meta Store Testes (dev@example.com)",
+  MELHORENVIO_USER_AGENT: "Visio Store Testes (dev@example.com)",
 });
 
 /** Estado de requisição simulado (cookies e cabeçalhos) usado pelo mock de next/headers. */

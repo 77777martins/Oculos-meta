@@ -17,6 +17,22 @@ async function base() {
     { slug: "acessorios", name: "Acessórios", description: "Estojos, lentes e acessórios.", sortOrder: 3 },
   ];
   for (const c of categories) await db.category.upsert({ where: { slug: c.slug }, update: {}, create: c });
+
+  // Banner principal (arte original da marca). Só cria se a loja ainda não tiver banners —
+  // nunca substitui o que o administrador cadastrar em Admin > Banners.
+  if ((await db.banner.count()) === 0) {
+    await db.banner.create({
+      data: {
+        title: "Veja o mundo de um jeito novo.",
+        subtitle: "Óculos inteligentes com câmera, áudio aberto e assistente de voz. Compra segura, PIX e entrega rastreada para todo o Brasil.",
+        imageUrl: "/images/banners/hero-visio.webp",
+        linkUrl: "/produtos",
+        ctaLabel: "Explorar modelos",
+        sortOrder: 0,
+        isActive: true,
+      },
+    });
+  }
 }
 
 async function demo() {

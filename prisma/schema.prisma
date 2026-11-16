@@ -1,5 +1,5 @@
 // =============================================================================
-// Oculos Meta Store — modelo de dados
+// Visio Store — modelo de dados
 // -----------------------------------------------------------------------------
 // Convenções:
 // - Valores monetários SEMPRE em centavos inteiros (sufixo `Cents`).
@@ -646,7 +646,7 @@ model MediaAsset {
 /// Configuração única da loja (linha com id = "default").
 model StoreSettings {
   id                     String   @id @default("default")
-  storeName              String   @default("Óculos Meta Store") @db.VarChar(80)
+  storeName              String   @default("Visio Store") @db.VarChar(80)
   legalName              String?  @db.VarChar(160)
   cnpj                   String?  @db.VarChar(18)
   contactEmail           String?  @db.VarChar(254)

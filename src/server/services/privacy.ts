@@ -5,6 +5,7 @@ import { ConflictError } from "@/lib/errors";
 import { hashPassword } from "@/lib/auth/password";
 import { revokeAllUserSessions } from "@/lib/auth/session";
 import { audit } from "./audit";
+import { getStoreSettings } from "./settings";
 
 /**
  * LGPD — direito de acesso (art. 18, II): exporta os dados pessoais do titular.
@@ -39,7 +40,8 @@ export async function exportUserData(userId: string) {
     },
   });
   await db.dataRequest.create({ data: { userId, type: "ACCESS", status: "COMPLETED", completedAt: new Date(), notes: "Exportação automática pelo titular" } });
-  return { generatedAt: new Date().toISOString(), controller: "Óculos Meta Store", data: user };
+  const settings = await getStoreSettings();
+  return { generatedAt: new Date().toISOString(), controller: settings.legalName ?? settings.storeName, data: user };
 }
 
 /**
