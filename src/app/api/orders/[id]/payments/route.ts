@@ -4,7 +4,7 @@ import { NotFoundError } from "@/lib/errors";
 import { RATE_LIMITS, enforceRateLimit } from "@/lib/security/rate-limit";
 import { paymentRequestSchema } from "@/lib/validation/checkout";
 import { idSchema } from "@/lib/validation/common";
-import { createCardPayment, createPixPayment } from "@/server/payments/service";
+import { createBoletoPayment, createCardPayment, createPixPayment } from "@/server/payments/service";
 
 /** Inicia o pagamento de um pedido do próprio cliente. O valor vem do pedido no banco. */
 export const POST = apiHandler<{ id: string }>(async (req, { params }) => {
@@ -17,7 +17,9 @@ export const POST = apiHandler<{ id: string }>(async (req, { params }) => {
   const payment =
     body.method === "pix"
       ? await createPixPayment(parsedId.data, user.id)
-      : await createCardPayment(parsedId.data, user.id, {
+      : body.method === "boleto"
+        ? await createBoletoPayment(parsedId.data, user.id)
+        : await createCardPayment(parsedId.data, user.id, {
           attemptId: body.attemptId,
           token: body.token,
           paymentMethodId: body.paymentMethodId,
@@ -37,6 +39,7 @@ export const POST = apiHandler<{ id: string }>(async (req, { params }) => {
     pixQrCode: payment.pixQrCode,
     pixQrCodeBase64: payment.pixQrCodeBase64,
     ticketUrl: payment.ticketUrl,
+    boletoLine: payment.boletoLine,
     expiresAt: payment.expiresAt,
   });
 });

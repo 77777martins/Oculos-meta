@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { centsToDecimal, decimalToCents } from "@/lib/money";
 import {
   PaymentProviderError,
+  type CreateBoletoInput,
   type CreateCardInput,
   type CreatePixInput,
   type PayerInfo,
@@ -16,9 +17,21 @@ import {
 type MpPayment = Awaited<ReturnType<Payment["get"]>>;
 
 /** Formato aceito pelo Mercado Pago: 2026-01-31T23:59:59.000-03:00 (horário de Brasília). */
+export { safeHttpsUrl };
+
 export function toMercadoPagoDate(date: Date): string {
   const shifted = new Date(date.getTime() - 3 * 60 * 60 * 1000);
   return shifted.toISOString().replace("Z", "-03:00");
+}
+
+/** Aceita apenas URLs https (o link é renderizado como href para o cliente). */
+function safeHttpsUrl(value: string | undefined | null): string | null {
+  if (!value) return null;
+  try {
+    return new URL(value).protocol === "https:" ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 function mapPayment(p: MpPayment): ProviderPayment {
@@ -36,7 +49,9 @@ function mapPayment(p: MpPayment): ProviderPayment {
     installments: p.installments ?? 1,
     pixQrCode: tx?.qr_code ?? null,
     pixQrCodeBase64: tx?.qr_code_base64 ?? null,
-    ticketUrl: tx?.ticket_url ?? null,
+    // PIX: ticket_url · Boleto: transaction_details.external_resource_url
+    ticketUrl: safeHttpsUrl(tx?.ticket_url ?? p.transaction_details?.external_resource_url),
+    boletoLine: (p.transaction_details?.digitable_line ?? p.transaction_details?.barcode?.content ?? null)?.slice(0, 80) ?? null,
     expiresAt: p.date_of_expiration ? new Date(p.date_of_expiration) : null,
     approvedAt: p.date_approved ? new Date(p.date_approved) : null,
     cardLastFour: p.card?.last_four_digits ?? null,
@@ -121,6 +136,31 @@ export class MercadoPagoGateway implements PaymentGateway {
     } catch (error) {
       if (error instanceof PaymentProviderError) throw error;
       wrap(error, "create_card");
+    }
+  }
+
+  async createBoletoPayment(input: CreateBoletoInput): Promise<ProviderPayment> {
+    try {
+      const a = input.payer.address;
+      const res = await new Payment(this.client()).create({
+        body: {
+          transaction_amount: centsToDecimal(input.amountCents),
+          description: input.description,
+          payment_method_id: "bolbradesco",
+          external_reference: input.externalReference,
+          date_of_expiration: toMercadoPagoDate(input.dueAt),
+          payer: {
+            ...payer(input.payer),
+            address: { zip_code: a.zipCode, street_name: a.street, street_number: a.number, neighborhood: a.district, city: a.city, federal_unit: a.state },
+          },
+          ...(input.notificationUrl ? { notification_url: input.notificationUrl } : {}),
+        },
+        requestOptions: { idempotencyKey: input.idempotencyKey },
+      });
+      return mapPayment(res);
+    } catch (error) {
+      if (error instanceof PaymentProviderError) throw error;
+      wrap(error, "create_boleto");
     }
   }
 

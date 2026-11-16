@@ -297,6 +297,7 @@ export async function getCustomerOrder(orderId: string, userId: string) {
           pixQrCode: true,
           pixQrCodeBase64: true,
           ticketUrl: true,
+          boletoLine: true,
           expiresAt: true,
           approvedAt: true,
           cardBrand: true,

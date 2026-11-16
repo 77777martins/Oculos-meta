@@ -38,6 +38,7 @@ export const checkoutSchema = z.strictObject({
 }).refine((v) => Boolean(v.addressId) !== Boolean(v.address), { message: "Selecione ou informe um endereço de entrega.", path: ["address"] });
 
 export const pixPaymentSchema = z.strictObject({ method: z.literal("pix") });
+export const boletoPaymentSchema = z.strictObject({ method: z.literal("boleto") });
 
 /** Dados retornados pelo Card Payment Brick (cartão já tokenizado pelo Mercado Pago). */
 export const cardPaymentSchema = z.strictObject({
@@ -52,7 +53,7 @@ export const cardPaymentSchema = z.strictObject({
   identificationNumber: z.string().regex(/^\d{11,14}$/).optional(),
 });
 
-export const paymentRequestSchema = z.discriminatedUnion("method", [pixPaymentSchema, cardPaymentSchema]);
+export const paymentRequestSchema = z.discriminatedUnion("method", [pixPaymentSchema, boletoPaymentSchema, cardPaymentSchema]);
 
 export type CheckoutInput = z.input<typeof checkoutSchema>;
 export type CartItemInput = z.infer<typeof cartItemSchema>;

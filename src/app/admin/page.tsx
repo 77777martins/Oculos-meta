@@ -31,7 +31,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
                 <Link href={`/admin/pedidos/${a.orderId}`} className="underline">
                   Pedido #{a.order.number}
                 </Link>{" "}
-                — {a.statusDetail === "amount_mismatch" ? "valor divergente do pedido" : "pago, porém cancelado/expirado (verificar estoque ou reembolsar)"}
+                — {a.reason === "AMOUNT_MISMATCH" ? "valor divergente do pedido" : a.reason === "DUPLICATE" ? "pagamento em duplicidade — reembolsar o excedente" : "pago, porém cancelado/expirado (verificar estoque ou reembolsar)"}
               </li>
             ))}
           </ul>

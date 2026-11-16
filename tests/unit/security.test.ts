@@ -68,3 +68,17 @@ describe("datas do Mercado Pago", () => {
     expect(toMercadoPagoDate(new Date("2026-01-31T15:00:00.000Z"))).toBe("2026-01-31T12:00:00.000-03:00");
   });
 });
+
+describe("boleto", () => {
+  it("vencimento às 23:59:59 de Brasília do N-ésimo dia", async () => {
+    const { boletoDueDate } = await import("@/server/payments/service");
+    // 16/11 às 01:00 UTC = 15/11 22:00 em Brasília → +2 dias = 17/11 23:59:59 BRT = 18/11 02:59:59 UTC
+    expect(boletoDueDate(2, new Date("2026-11-16T01:00:00Z")).toISOString()).toBe("2026-11-18T02:59:59.000Z");
+  });
+  it("links do provedor só são aceitos em https", async () => {
+    const { safeHttpsUrl } = await import("@/server/payments/mercadopago");
+    expect(safeHttpsUrl("javascript:alert(1)")).toBeNull();
+    expect(safeHttpsUrl("http://x.com")).toBeNull();
+    expect(safeHttpsUrl("https://www.mercadopago.com.br/x")).toBe("https://www.mercadopago.com.br/x");
+  });
+});

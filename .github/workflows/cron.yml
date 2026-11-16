@@ -1,0 +1,27 @@
+# Expira pedidos não pagos e concilia pagamentos a cada 10 minutos.
+# Necessário no plano Hobby da Vercel (que só permite cron diário).
+# Secrets do repositório: APP_URL (ex.: https://sualoja.com.br) e CRON_SECRET (o mesmo da Vercel).
+name: Cron — expirar pedidos
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  expire-orders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Chamar endpoint de expiração
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Secrets APP_URL/CRON_SECRET não configurados — nada a fazer."; exit 0
+          fi
+          curl --fail --silent --show-error --max-time 60 \
+            -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/expire-orders"

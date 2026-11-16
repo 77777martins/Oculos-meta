@@ -1,6 +1,6 @@
 # Óculos Meta Store
 
-E-commerce completo de óculos inteligentes (Ray-Ban Meta e outros modelos): loja, carrinho, checkout, **pagamentos reais via Mercado Pago (PIX e cartão)**, área do cliente, painel administrativo, controle de estoque, LGPD e segurança alinhada à OWASP.
+E-commerce completo de óculos inteligentes (Ray-Ban Meta e outros modelos): loja, carrinho, checkout, **pagamentos reais via Mercado Pago (PIX, cartão e boleto)**, área do cliente, painel administrativo, controle de estoque, LGPD e segurança alinhada à OWASP.
 
 ## Stack
 
@@ -37,6 +37,14 @@ npm run dev                          # http://localhost:3000  ·  painel: /admin
 | `npm run test:e2e` | Navegador real contra o build de produção (requer `npm run build` e seed de demonstração) |
 | `npm run db:migrate` · `db:deploy` · `db:seed` | Migrações (dev) · migrações (produção) · seed |
 | `npm run admin:create` | Cria/promove o administrador inicial |
+
+## Automação (GitHub Actions)
+
+| Workflow | Quando | O que faz |
+|---|---|---|
+| CI | todo push/PR | audit, lint, tipos, testes (Postgres real), build |
+| Cron — expirar pedidos | a cada 10 min | chama `/api/cron/expire-orders` (requer secrets `APP_URL`, `CRON_SECRET`) |
+| Bootstrap de produção | manual | migrações + dados base + administrador (secrets `PROD_DIRECT_URL`, `ADMIN_PASSWORD`) |
 
 ## Documentação
 

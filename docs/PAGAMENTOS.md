@@ -23,7 +23,16 @@ PIX nativo com QR Code e copia-e-cola via API, cartão com parcelamento, antifra
 3. **Cartão**: o Card Payment Brick tokeniza o cartão no navegador (dados do cartão nunca chegam ao servidor). O servidor cria o pagamento com o token; `attemptId` (UUID) é a chave de idempotência — duplo clique não cobra duas vezes.
 4. **Confirmação**: webhook assinado ou polling → o servidor **consulta `GET /v1/payments/:id`** e só então aplica o status. Confere valor e moeda contra o pedido; divergência gera alerta e não confirma.
 5. **Aprovado**: em uma transação, reserva vira baixa de estoque, pedido → `PAID`, histórico + evento financeiro; e-mail de confirmação é enviado depois.
-6. **Expiração**: o cron (`/api/cron/expire-orders`, a cada 10 min) concilia pagamentos pendentes com o provedor e expira os vencidos, liberando estoque e cupom.
+6. **Expiração**: o cron (`/api/cron/expire-orders`, a cada 10 min via GitHub Actions — veja `docs/DEPLOY.md`) concilia pagamentos pendentes com o provedor e expira os vencidos, liberando estoque e cupom.
+
+## Boleto
+- Habilite em **Admin → Configurações** (desligado por padrão) e defina o vencimento (1–5 dias).
+- Emitido pela API de Pagamentos (`payment_method_id: bolbradesco`) com CPF e endereço do pedido; o cliente recebe linha digitável e link do PDF.
+- **Reserva de estoque** estendida até o vencimento + 3 dias (prazo de compensação bancária) — só depois que o provedor confirma a emissão.
+- Confirmação pelo mesmo fluxo (webhook/conciliação). Boleto pago após o prazo segue a regra de "pago após expiração".
+
+## Proteção contra cobrança em duplicidade
+O cliente pode alternar entre PIX, cartão e boleto no mesmo pedido. Quando um pagamento é aprovado, os demais pendentes são **cancelados no Mercado Pago**. Se mesmo assim um segundo for aprovado (ex.: boleto já pago no banco), o estoque **não** é baixado de novo, o histórico do pedido recebe um aviso e o **dashboard mostra o alerta "pagamento em duplicidade — reembolsar o excedente"**.
 
 ## Casos especiais tratados
 | Situação | Comportamento |

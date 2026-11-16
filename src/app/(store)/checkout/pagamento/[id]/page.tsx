@@ -23,6 +23,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
 
   const settings = await getStoreSettings();
   const pendingPix = order.payments.find((p) => p.method === "PIX" && p.status === "PENDING" && p.pixQrCode && p.expiresAt && p.expiresAt > new Date());
+  const pendingBoleto = order.payments.find((p) => p.method === "BOLETO" && p.status === "PENDING" && p.ticketUrl && p.expiresAt && p.expiresAt > new Date());
   const address = order.shippingAddress as unknown as ShippingAddressSnapshot;
 
   return (
@@ -39,6 +40,8 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
             totalCents={order.totalCents}
             reservationExpiresAt={order.reservationExpiresAt?.toISOString() ?? null}
             existingPix={pendingPix ? { id: pendingPix.id, status: pendingPix.status, pixQrCode: pendingPix.pixQrCode, pixQrCodeBase64: pendingPix.pixQrCodeBase64, expiresAt: pendingPix.expiresAt!.toISOString() } : null}
+            existingBoleto={pendingBoleto ? { id: pendingBoleto.id, ticketUrl: pendingBoleto.ticketUrl, boletoLine: pendingBoleto.boletoLine, expiresAt: pendingBoleto.expiresAt!.toISOString() } : null}
+            boletoEnabled={settings.boletoEnabled}
             maxInstallments={settings.maxInstallments}
             payerEmail={order.customerEmail}
           />

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/field";
+import { Checkbox, Input, Textarea } from "@/components/ui/field";
 import { useToast } from "@/components/providers/toast";
 import { apiFetch } from "@/lib/http/client";
 import { settingsSchema } from "@/lib/validation/admin";
@@ -48,6 +48,14 @@ export function SettingsForm({ initial }: { initial: Values }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Validade do PIX e da reserva de estoque (minutos)" type="number" {...r("pixExpirationMinutes", { valueAsNumber: true })} error={e.pixExpirationMinutes?.message} hint="Entre 10 e 1440." />
           <Input label="Parcelamento máximo no cartão" type="number" {...r("maxInstallments", { valueAsNumber: true })} error={e.maxInstallments?.message} hint="Também limitado pelas condições da sua conta Mercado Pago." />
+          <Checkbox className="self-end" label="Aceitar boleto bancário" {...r("boletoEnabled")} />
+          <Input
+            label="Vencimento do boleto (dias corridos)"
+            type="number"
+            {...r("boletoDueDays", { valueAsNumber: true })}
+            error={e.boletoDueDays?.message}
+            hint="Entre 1 e 5. O estoque fica reservado até o vencimento + 3 dias (prazo de compensação bancária)."
+          />
         </div>
       </Panel>
       <Panel title="Textos institucionais e políticas">

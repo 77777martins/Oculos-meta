@@ -17,6 +17,8 @@ export interface ProviderPayment {
   pixQrCode: string | null;
   pixQrCodeBase64: string | null;
   ticketUrl: string | null;
+  /** Linha digitável (boleto). */
+  boletoLine: string | null;
   expiresAt: Date | null;
   approvedAt: Date | null;
   cardLastFour: string | null;
@@ -38,6 +40,25 @@ export interface CreatePixInput {
   description: string;
   expiresAt: Date;
   payer: PayerInfo;
+  notificationUrl: string | null;
+}
+
+export interface PayerAddress {
+  zipCode: string;
+  street: string;
+  number: string;
+  district: string;
+  city: string;
+  state: string;
+}
+
+export interface CreateBoletoInput {
+  idempotencyKey: string;
+  externalReference: string;
+  amountCents: number;
+  description: string;
+  dueAt: Date;
+  payer: PayerInfo & { address: PayerAddress };
   notificationUrl: string | null;
 }
 
@@ -65,6 +86,7 @@ export interface PaymentGateway {
   isConfigured(): boolean;
   createPixPayment(input: CreatePixInput): Promise<ProviderPayment>;
   createCardPayment(input: CreateCardInput): Promise<ProviderPayment>;
+  createBoletoPayment(input: CreateBoletoInput): Promise<ProviderPayment>;
   getPayment(providerPaymentId: string): Promise<ProviderPayment>;
   cancelPayment(providerPaymentId: string): Promise<void>;
   refundPayment(input: { providerPaymentId: string; amountCents?: number; idempotencyKey: string }): Promise<ProviderRefund>;

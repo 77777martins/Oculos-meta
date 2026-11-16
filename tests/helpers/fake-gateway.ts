@@ -1,4 +1,4 @@
-import type { CreateCardInput, CreatePixInput, PaymentGateway, ProviderPayment, ProviderRefund } from "@/server/payments/gateway";
+import type { CreateBoletoInput, CreateCardInput, CreatePixInput, PaymentGateway, ProviderPayment, ProviderRefund } from "@/server/payments/gateway";
 
 /**
  * Dublê do Mercado Pago para testes: mantém pagamentos em memória e permite
@@ -31,6 +31,7 @@ export class FakeGateway implements PaymentGateway {
       pixQrCode: null,
       pixQrCodeBase64: null,
       ticketUrl: null,
+      boletoLine: null,
       expiresAt: null,
       approvedAt: null,
       cardLastFour: null,
@@ -51,6 +52,22 @@ export class FakeGateway implements PaymentGateway {
       pixQrCode: "00020126580014br.gov.bcb.pix-FAKE",
       pixQrCodeBase64: "iVBORw0KGgo=",
       expiresAt: input.expiresAt,
+    });
+  }
+
+  boletoInputs: CreateBoletoInput[] = [];
+
+  async createBoletoPayment(input: CreateBoletoInput) {
+    this.boletoInputs.push(input);
+    return this.create(input.idempotencyKey, {
+      amountCents: input.amountCents,
+      externalReference: input.externalReference,
+      paymentMethodId: "bolbradesco",
+      paymentTypeId: "ticket",
+      statusDetail: "pending_waiting_payment",
+      ticketUrl: "https://www.mercadopago.com.br/payments/0/ticket?fake=1",
+      boletoLine: "23790.00000 00000.000000 00000.000000 0 00000000000000",
+      expiresAt: input.dueAt,
     });
   }
 

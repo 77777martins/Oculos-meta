@@ -173,7 +173,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     {p.installments > 1 ? ` · ${p.installments}x` : ""}
                     {p.cardLastFour ? ` · final ${p.cardLastFour}` : ""}
                   </span>
-                  <PaymentStatusBadge status={p.status} />
+                  <span className="flex items-center gap-2">
+                    {p.method === "BOLETO" && p.status === "PENDING" && p.ticketUrl && (
+                      <a href={p.ticketUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-brand-700 hover:underline">
+                        Ver boleto
+                      </a>
+                    )}
+                    <PaymentStatusBadge status={p.status} />
+                  </span>
                 </li>
               ))}
             </ul>

@@ -64,6 +64,8 @@ export const settingsSchema = z.strictObject({
   aboutText: longText(20_000).optional().nullable(),
   pixExpirationMinutes: z.number().int().min(10).max(1440),
   maxInstallments: z.number().int().min(1).max(24),
+  boletoEnabled: z.boolean(),
+  boletoDueDays: z.number().int().min(1).max(5),
 });
 
 export const orderStatusUpdateSchema = z.strictObject({

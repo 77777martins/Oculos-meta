@@ -35,6 +35,19 @@ export async function getDashboardMetrics() {
     db.contactMessage.count({ where: { handledAt: null } }),
   ]);
 
+  // Pagamento aprovado em DUPLICIDADE (ex.: PIX e boleto): existe outro aprovado mais antigo no mesmo pedido
+  // e este ainda não foi totalmente reembolsado.
+  const duplicates = await db.$queryRaw<Array<{ id: string; orderId: string; number: number }>>`
+    SELECT p."id", p."orderId", o."number"
+    FROM "Payment" p JOIN "Order" o ON o."id" = p."orderId"
+    WHERE p."status" = 'APPROVED' AND p."refundedCents" < p."amountCents"
+      AND EXISTS (
+        SELECT 1 FROM "Payment" q
+        WHERE q."orderId" = p."orderId" AND q."id" <> p."id" AND q."status" IN ('APPROVED', 'REFUNDED')
+          AND (q."approvedAt" < p."approvedAt" OR (q."approvedAt" = p."approvedAt" AND q."id" < p."id"))
+      )
+    LIMIT 10`;
+
   const revenue30 = paid30.reduce((a, o) => a + o.totalCents, 0);
   const prevRevenue = paidPrev._sum.totalCents ?? 0;
 
@@ -55,7 +68,10 @@ export async function getDashboardMetrics() {
     newCustomers,
     lowStock,
     recentOrders,
-    alerts,
+    alerts: [
+      ...alerts.map((a) => ({ ...a, reason: a.statusDetail === "amount_mismatch" ? ("AMOUNT_MISMATCH" as const) : ("PAID_CLOSED_ORDER" as const) })),
+      ...duplicates.map((d) => ({ id: d.id, orderId: d.orderId, statusDetail: null, order: { number: d.number }, reason: "DUPLICATE" as const })),
+    ],
     unread,
     daily: [...byDay.entries()].map(([day, cents]) => ({ day, cents })),
   };

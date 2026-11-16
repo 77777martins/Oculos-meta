@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Copy, CreditCard, QrCode, ShieldCheck, Timer } from "lucide-react";
+import { Barcode, Check, Copy, CreditCard, ExternalLink, QrCode, ShieldCheck, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/providers/toast";
 import { apiFetch } from "@/lib/http/client";
@@ -18,12 +18,21 @@ interface PixData {
   expiresAt: string | null;
 }
 
+interface BoletoData {
+  id: string;
+  ticketUrl: string | null;
+  boletoLine: string | null;
+  expiresAt: string | null;
+}
+
 interface Props {
   orderId: string;
   orderNumber: number;
   totalCents: number;
   reservationExpiresAt: string | null;
   existingPix: PixData | null;
+  existingBoleto: BoletoData | null;
+  boletoEnabled: boolean;
   maxInstallments: number;
   payerEmail: string;
 }
@@ -31,7 +40,8 @@ interface Props {
 export function PaymentPanel(props: Props) {
   const router = useRouter();
   const toast = useToast();
-  const [method, setMethod] = useState<"pix" | "card">("pix");
+  const [method, setMethod] = useState<"pix" | "card" | "boleto">(props.existingBoleto && !props.existingPix ? "boleto" : "pix");
+  const [boleto, setBoleto] = useState<BoletoData | null>(props.existingBoleto);
   const [pix, setPix] = useState<PixData | null>(props.existingPix);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -48,8 +58,9 @@ export function PaymentPanel(props: Props) {
   );
 
   // Consulta periódica de status — a confirmação vem do servidor/provedor, nunca do navegador.
+  const awaiting = Boolean(pix || boleto);
   useEffect(() => {
-    if (!pix) return;
+    if (!awaiting) return;
     let stopped = false;
     const poll = async () => {
       try {
@@ -67,14 +78,14 @@ export function PaymentPanel(props: Props) {
       stopped = true;
       clearInterval(id);
     };
-  }, [pix, props.orderId, goTo]);
+  }, [awaiting, props.orderId, goTo]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const deadline = pix?.expiresAt ?? props.reservationExpiresAt;
+  const deadline = method === "boleto" ? (boleto?.expiresAt ?? null) : (pix?.expiresAt ?? props.reservationExpiresAt);
   const remainingMs = deadline ? new Date(deadline).getTime() - now : null;
   const expired = remainingMs !== null && remainingMs <= 0;
 
@@ -90,12 +101,23 @@ export function PaymentPanel(props: Props) {
     }
   }
 
-  async function copyCode() {
-    if (!pix?.pixQrCode) return;
+  async function generateBoleto() {
+    setGenerating(true);
     try {
-      await navigator.clipboard.writeText(pix.pixQrCode);
+      setBoleto(await apiFetch<BoletoData>(`/api/orders/${props.orderId}/payments`, { body: { method: "boleto" } }));
+    } catch (e) {
+      toast.error("Não foi possível gerar o boleto", (e as Error).message);
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function copyCode(value: string | null | undefined = pix?.pixQrCode, label = "Código PIX copiado!") {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
       setCopied(true);
-      toast.success("Código PIX copiado!");
+      toast.success(label);
       setTimeout(() => setCopied(false), 3000);
     } catch {
       toast.error("Não foi possível copiar", "Selecione o código e copie manualmente.");
@@ -104,11 +126,12 @@ export function PaymentPanel(props: Props) {
 
   return (
     <div className="rounded-3xl border border-slate-100 p-6 sm:p-8">
-      <div className="grid grid-cols-2 gap-2 rounded-full bg-slate-100 p-1" role="tablist" aria-label="Forma de pagamento">
+      <div className={`grid gap-2 rounded-full bg-slate-100 p-1 ${props.boletoEnabled ? "grid-cols-3" : "grid-cols-2"}`} role="tablist" aria-label="Forma de pagamento">
         {(
           [
             ["pix", "PIX", QrCode],
-            ["card", "Cartão de crédito", CreditCard],
+            ["card", "Cartão", CreditCard],
+            ...(props.boletoEnabled ? ([["boleto", "Boleto", Barcode]] as const) : []),
           ] as const
         ).map(([value, label, Icon]) => (
           <button
@@ -127,7 +150,7 @@ export function PaymentPanel(props: Props) {
       {remainingMs !== null && !expired && (
         <p className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-600">
           <Timer className="size-4 text-brand-600" aria-hidden />
-          Reserva do estoque expira em <strong className="tabular-nums text-ink">{formatRemaining(remainingMs)}</strong>
+          {method === "boleto" ? "Boleto vence em" : "Reserva do estoque expira em"} <strong className="tabular-nums text-ink">{formatRemaining(remainingMs)}</strong>
         </p>
       )}
       {expired && <p className="mt-6 rounded-2xl bg-amber-50 p-4 text-center text-sm text-amber-800">O prazo deste pedido expirou. Se você já pagou, aguarde a confirmação; caso contrário, faça um novo pedido.</p>}
@@ -159,7 +182,7 @@ export function PaymentPanel(props: Props) {
                   </label>
                   <div className="mt-2 flex gap-2">
                     <input id="pix-code" readOnly value={pix.pixQrCode} onFocus={(e) => e.currentTarget.select()} className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 font-mono text-xs" />
-                    <Button onClick={copyCode} variant={copied ? "secondary" : "dark"} icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />}>
+                    <Button onClick={() => copyCode()} variant={copied ? "secondary" : "dark"} icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />}>
                       {copied ? "Copiado" : "Copiar"}
                     </Button>
                   </div>
@@ -172,6 +195,40 @@ export function PaymentPanel(props: Props) {
                 </span>
                 Aguardando confirmação do pagamento…
               </p>
+            </div>
+          )
+        ) : method === "boleto" ? (
+          !boleto ? (
+            <div className="text-center">
+              <p className="text-slate-600">
+                Pague {formatBRL(props.totalCents)} com boleto em qualquer banco, lotérica ou app. A compensação pode levar até 2 dias úteis após o pagamento; o pedido é confirmado automaticamente.
+              </p>
+              <Button size="lg" className="mt-6" onClick={generateBoleto} loading={generating} disabled={expired} icon={<Barcode className="size-5" />}>
+                Gerar boleto
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center text-center">
+              <p className="text-slate-600">Boleto gerado. Pague até o vencimento — após o prazo ele não poderá ser pago e a reserva será liberada.</p>
+              {boleto.boletoLine && (
+                <div className="mt-6 w-full max-w-md">
+                  <label htmlFor="boleto-line" className="block text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Linha digitável
+                  </label>
+                  <div className="mt-2 flex gap-2">
+                    <input id="boleto-line" readOnly value={boleto.boletoLine} onFocus={(e) => e.currentTarget.select()} className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 font-mono text-xs" />
+                    <Button onClick={() => copyCode(boleto.boletoLine, "Linha digitável copiada!")} variant={copied ? "secondary" : "dark"} icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />}>
+                      {copied ? "Copiado" : "Copiar"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {boleto.ticketUrl && (
+                <a href={boleto.ticketUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
+                  Abrir boleto (PDF) <ExternalLink className="size-4" aria-hidden />
+                </a>
+              )}
+              <p className="mt-6 text-xs text-slate-500">Se preferir, você ainda pode pagar com PIX ou cartão — o boleto será cancelado automaticamente.</p>
             </div>
           )
         ) : (

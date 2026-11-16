@@ -479,6 +479,8 @@ model Payment {
   pixQrCode         String?         @db.Text
   pixQrCodeBase64   String?         @db.Text
   ticketUrl         String?         @db.VarChar(1024)
+  /// Linha digitável do boleto.
+  boletoLine        String?         @db.VarChar(80)
   cardLastFour      String?         @db.Char(4)
   cardBrand         String?         @db.VarChar(40)
   expiresAt         DateTime?
@@ -644,6 +646,10 @@ model StoreSettings {
   /// Tempo de validade do QR Code PIX e da reserva de estoque.
   pixExpirationMinutes   Int      @default(30)
   maxInstallments        Int      @default(12)
+  /// Boleto bancário (desligado por padrão: segura estoque por vários dias).
+  boletoEnabled          Boolean  @default(false)
+  /// Dias corridos até o vencimento do boleto.
+  boletoDueDays          Int      @default(2)
   updatedAt              DateTime @updatedAt
 }
 

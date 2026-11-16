@@ -7,7 +7,7 @@ import { AppError, ConflictError, NotFoundError, ServiceUnavailableError, Valida
 import { logger } from "@/lib/logger";
 import { audit } from "@/server/services/audit";
 import { returnToStock } from "@/server/services/inventory";
-import { markOrderPaid } from "@/server/services/orders";
+import { markOrderPaid, type ShippingAddressSnapshot } from "@/server/services/orders";
 import { canTransition, mapMercadoPagoStatus } from "@/server/services/order-state";
 import { getStoreSettings } from "@/server/services/settings";
 import { orderPaidEmail, sendMail } from "@/server/services/mail";
@@ -122,6 +122,83 @@ export async function createPixPayment(orderId: string, userId: string) {
         expiresAt: provider.expiresAt ?? expiresAt,
       },
     });
+    await recordEvent({ eventKey: `create:${local.id}`, source: "api", type: "payment.created", provider, paymentId: local.id, signatureValid: true });
+    return updated;
+  } catch (error) {
+    await db.payment.update({ where: { id: local.id }, data: { status: "CANCELLED", statusDetail: "provider_error" } }).catch(() => undefined);
+    toAppError(error);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Boleto
+// -----------------------------------------------------------------------------
+
+/** Dias extras de reserva após o vencimento: o banco pode levar até ~2 dias úteis para compensar. */
+export const BOLETO_COMPENSATION_DAYS = 3;
+
+/** Vencimento às 23:59:59 (Brasília) do N-ésimo dia corrido a partir de hoje. */
+export function boletoDueDate(days: number, now = new Date()): Date {
+  const brt = new Date(now.getTime() - 3 * 3_600_000); // relógio de Brasília (UTC-3, sem horário de verão)
+  return new Date(Date.UTC(brt.getUTCFullYear(), brt.getUTCMonth(), brt.getUTCDate() + days, 23 + 3, 59, 59));
+}
+
+export async function createBoletoPayment(orderId: string, userId: string) {
+  assertGatewayConfigured();
+  const settings = await getStoreSettings();
+  if (!settings.boletoEnabled) throw new ConflictError("Pagamento por boleto indisponível no momento.", "BOLETO_DISABLED");
+  const order = await loadPayableOrder(orderId, userId);
+
+  const existing = await db.payment.findFirst({
+    where: { orderId, method: "BOLETO", status: "PENDING", amountCents: order.totalCents, expiresAt: { gt: new Date(Date.now() + 3_600_000) }, ticketUrl: { not: null } },
+    orderBy: { createdAt: "desc" },
+  });
+  if (existing) return existing;
+
+  const dueAt = boletoDueDate(settings.boletoDueDays);
+  const address = order.shippingAddress as unknown as ShippingAddressSnapshot;
+  const idempotencyKey = randomUUID();
+  const local = await db.payment.create({ data: { orderId, method: "BOLETO", status: "PENDING", amountCents: order.totalCents, idempotencyKey, expiresAt: dueAt } });
+
+  const { firstName, lastName } = splitName(order.customerName);
+  try {
+    const provider = await getPaymentGateway().createBoletoPayment({
+      idempotencyKey,
+      externalReference: local.id,
+      amountCents: order.totalCents,
+      description: `Pedido #${order.number} - ${settings.storeName}`.slice(0, 120),
+      dueAt,
+      payer: {
+        email: order.customerEmail,
+        firstName,
+        lastName,
+        documentType: "CPF",
+        documentNumber: order.customerDocument,
+        address: { zipCode: address.zipCode, street: address.street, number: address.number, district: address.district, city: address.city, state: address.state },
+      },
+      notificationUrl: notificationUrl(),
+    });
+    if (!provider.ticketUrl) throw new PaymentProviderError("O provedor não retornou o boleto.", true);
+
+    // Somente após o boleto existir: estende a reserva até o vencimento + prazo de compensação.
+    const reservationUntil = new Date(dueAt.getTime() + BOLETO_COMPENSATION_DAYS * 86_400_000);
+    const [updated] = await db.$transaction([
+      db.payment.update({
+        where: { id: local.id },
+        data: {
+          providerPaymentId: provider.id,
+          status: mapMercadoPagoStatus(provider.status),
+          statusDetail: provider.statusDetail,
+          ticketUrl: provider.ticketUrl,
+          boletoLine: provider.boletoLine,
+          expiresAt: provider.expiresAt ?? dueAt,
+        },
+      }),
+      db.order.updateMany({
+        where: { id: orderId, status: "PENDING_PAYMENT", OR: [{ reservationExpiresAt: null }, { reservationExpiresAt: { lt: reservationUntil } }] },
+        data: { reservationExpiresAt: reservationUntil },
+      }),
+    ]);
     await recordEvent({ eventKey: `create:${local.id}`, source: "api", type: "payment.created", provider, paymentId: local.id, signatureValid: true });
     return updated;
   } catch (error) {
@@ -306,6 +383,17 @@ export async function applyProviderPayment(
       if (statusChanged && nextStatus === "APPROVED") {
         const { outcome } = await markOrderPaid(tx, order.id, `Pagamento ${payment.method} aprovado (${provider.id})`);
         becamePaid = outcome === "PAID";
+        if (outcome === "ALREADY_PAID") {
+          // Cliente pagou duas vezes (ex.: PIX e depois o boleto). O valor excedente precisa ser devolvido.
+          const others = await tx.payment.count({ where: { orderId: order.id, status: "APPROVED", id: { not: payment.id } } });
+          if (others > 0) {
+            await tx.orderStatusHistory.create({
+              data: { orderId: order.id, fromStatus: order.status, toStatus: order.status, note: `ATENÇÃO: pagamento em duplicidade aprovado (${provider.id}) — reembolsar este pagamento.` },
+            });
+            await audit({ action: "payment.duplicate_approved", entityType: "Payment", entityId: payment.id, metadata: { orderId: order.id } }, tx);
+            logger.error("payment.duplicate_approved", { orderId: order.id, paymentId: payment.id });
+          }
+        }
         if (outcome === "NO_STOCK") {
           await tx.orderStatusHistory.create({
             data: { orderId: order.id, fromStatus: order.status, toStatus: order.status, note: "ATENÇÃO: pagamento aprovado após expiração e sem estoque disponível — reembolso necessário." },
@@ -326,8 +414,31 @@ export async function applyProviderPayment(
   );
 
   logger.info("payment.applied", { paymentId: result.payment.id, status: result.payment.status, source: meta.source });
-  if (becamePaid) void notifyOrderPaid(result.payment.orderId);
+  if (becamePaid) {
+    await cancelOtherPendingPayments(result.payment.orderId, result.payment.id);
+    void notifyOrderPaid(result.payment.orderId);
+  }
   return result.payment;
+}
+
+/**
+ * Após a aprovação, cancela no provedor os demais pagamentos ainda pendentes do
+ * mesmo pedido (ex.: um boleto emitido antes de o cliente pagar via PIX),
+ * evitando cobrança em duplicidade. Falhas são registradas e não desfazem nada.
+ */
+async function cancelOtherPendingPayments(orderId: string, approvedPaymentId: string): Promise<void> {
+  const pending = await db.payment.findMany({
+    where: { orderId, id: { not: approvedPaymentId }, status: { in: ["PENDING", "IN_PROCESS"] }, providerPaymentId: { not: null } },
+    select: { id: true, providerPaymentId: true },
+  });
+  for (const p of pending) {
+    try {
+      await getPaymentGateway().cancelPayment(p.providerPaymentId!);
+      await db.payment.updateMany({ where: { id: p.id, status: { in: ["PENDING", "IN_PROCESS"] } }, data: { status: "CANCELLED", statusDetail: "cancelled_other_payment_approved" } });
+    } catch (error) {
+      logger.warn("payment.cancel_other_failed", { orderId, paymentId: p.id, error });
+    }
+  }
 }
 
 /** E-mail de confirmação — fora da transação: falha de e-mail nunca desfaz o pagamento. */

@@ -1,0 +1,43 @@
+# Execução MANUAL (Actions → "Bootstrap de produção" → Run workflow).
+# Aplica migrações, cria dados base (configurações e categorias) e o administrador.
+# Secrets do repositório: PROD_DIRECT_URL (URL DIRETA do banco de produção) e ADMIN_PASSWORD.
+# Pode ser executado de novo com segurança (idempotente); rodar novamente redefine a senha do admin.
+name: Bootstrap de produção
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_email:
+        description: E-mail do administrador
+        required: true
+      admin_name:
+        description: Nome do administrador
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DIRECT_URL }}
+      DIRECT_URL: ${{ secrets.PROD_DIRECT_URL }}
+      ADMIN_EMAIL: ${{ inputs.admin_email }}
+      ADMIN_NAME: ${{ inputs.admin_name }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Verificar secrets
+        run: |
+          [ -n "$DATABASE_URL" ] || { echo "::error::Secret PROD_DIRECT_URL ausente"; exit 1; }
+          [ -n "$ADMIN_PASSWORD" ] || { echo "::error::Secret ADMIN_PASSWORD ausente"; exit 1; }
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npx prisma db seed
+      - run: npm run admin:create
