@@ -1,0 +1,18 @@
+# PostgreSQL para DESENVOLVIMENTO local. Em produção use um PostgreSQL gerenciado.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: oculos
+      POSTGRES_PASSWORD: oculos_dev
+      POSTGRES_DB: oculos_meta
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oculos -d oculos_meta"]
+      interval: 5s
+      retries: 10
+volumes:
+  pgdata:

@@ -1,0 +1,742 @@
+// =============================================================================
+// Oculos Meta Store — modelo de dados
+// -----------------------------------------------------------------------------
+// Convenções:
+// - Valores monetários SEMPRE em centavos inteiros (sufixo `Cents`).
+// - IDs em cuid (não sequenciais → dificulta enumeração / IDOR).
+// - `deletedAt` = soft delete onde o histórico precisa ser preservado.
+// - Pedidos guardam SNAPSHOT de preço/nome/endereço: alterações futuras no
+//   catálogo nunca mudam o que o cliente comprou.
+// - CHECK constraints adicionais (estoque >= 0 etc.) ficam na migração SQL.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Usuários, sessões e autenticação
+// -----------------------------------------------------------------------------
+
+enum Role {
+  CUSTOMER
+  SUPPORT
+  MANAGER
+  ADMIN
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String
+  phone            String?
+  passwordHash     String
+  role             Role      @default(CUSTOMER)
+  emailVerifiedAt  DateTime?
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  /// Data de anonimização (LGPD — exclusão de conta). Usuário anonimizado não autentica.
+  anonymizedAt     DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  addresses           Address[]
+  orders              Order[]
+  favorites           Favorite[]
+  couponRedemptions   CouponRedemption[]
+  consents            ConsentRecord[]
+  dataRequests        DataRequest[]
+  auditLogs           AuditLog[]           @relation("AuditActor")
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  /// SHA-256 do token. O token em texto puro só existe no cookie do cliente.
+  tokenHash  String    @unique
+  userId     String
+  expiresAt  DateTime
+  lastUsedAt DateTime  @default(now())
+  userAgent  String?   @db.VarChar(512)
+  ipHash     String?   @db.VarChar(64)
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Address {
+  id         String    @id @default(cuid())
+  userId     String
+  label      String?   @db.VarChar(60)
+  recipient  String    @db.VarChar(120)
+  zipCode    String    @db.Char(8)
+  street     String    @db.VarChar(160)
+  number     String    @db.VarChar(20)
+  complement String?   @db.VarChar(80)
+  district   String    @db.VarChar(80)
+  city       String    @db.VarChar(80)
+  state      String    @db.Char(2)
+  phone      String?   @db.VarChar(20)
+  isDefault  Boolean   @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, deletedAt])
+}
+
+// -----------------------------------------------------------------------------
+// Catálogo
+// -----------------------------------------------------------------------------
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(80)
+  slug        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  imageUrl    String?  @db.VarChar(1024)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([isActive, sortOrder])
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  name           String        @db.VarChar(160)
+  slug           String        @unique @db.VarChar(180)
+  brand          String        @default("Meta") @db.VarChar(80)
+  model          String        @db.VarChar(120)
+  shortDescription String?     @db.VarChar(300)
+  description    String        @db.Text
+  /// Especificações técnicas cadastradas e VERIFICADAS pelo administrador: [{ label, value }]
+  specs          Json          @default("[]")
+  status         ProductStatus @default(DRAFT)
+  isFeatured     Boolean       @default(false)
+  categoryId     String?
+  seoTitle       String?       @db.VarChar(70)
+  seoDescription String?       @db.VarChar(160)
+  publishedAt    DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  category  Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants  ProductVariant[]
+  images    ProductImage[]
+  favorites Favorite[]
+
+  @@index([status, deletedAt])
+  @@index([categoryId])
+  @@index([isFeatured])
+}
+
+model ProductVariant {
+  id             String   @id @default(cuid())
+  productId      String
+  sku            String   @unique @db.VarChar(64)
+  name           String   @db.VarChar(120)
+  color          String?  @db.VarChar(60)
+  colorHex       String?  @db.Char(7)
+  lens           String?  @db.VarChar(80)
+  size           String?  @db.VarChar(40)
+  priceCents     Int
+  /// Preço promocional. Quando preenchido (e menor que priceCents) é o preço cobrado.
+  salePriceCents Int?
+  /// Estoque físico disponível no depósito.
+  stock          Int      @default(0)
+  /// Unidades reservadas por pedidos aguardando pagamento. Disponível = stock - reserved.
+  reserved       Int      @default(0)
+  weightGrams    Int      @default(300)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images             ProductImage[]
+  orderItems         OrderItem[]
+  inventoryMovements InventoryMovement[]
+
+  @@index([productId, isActive])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  variantId String?
+  url       String   @db.VarChar(1024)
+  alt       String   @db.VarChar(200)
+  width     Int?
+  height    Int?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([productId, sortOrder])
+}
+
+enum InventoryMovementType {
+  RESTOCK
+  ADJUSTMENT
+  RESERVE
+  RELEASE
+  SALE
+  RETURN
+}
+
+/// Livro-razão de estoque: toda alteração gera um registro (rastreabilidade).
+model InventoryMovement {
+  id        String                @id @default(cuid())
+  variantId String
+  type      InventoryMovementType
+  /// Positivo ou negativo, conforme o efeito no campo afetado.
+  quantity  Int
+  reason    String?               @db.VarChar(300)
+  orderId   String?
+  actorId   String?
+  createdAt DateTime              @default(now())
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  order   Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([variantId, createdAt])
+  @@index([orderId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+// -----------------------------------------------------------------------------
+// Cupons
+// -----------------------------------------------------------------------------
+
+enum CouponType {
+  PERCENT
+  FIXED
+  FREE_SHIPPING
+}
+
+model Coupon {
+  id                String     @id @default(cuid())
+  code              String     @unique @db.VarChar(40)
+  description       String?    @db.VarChar(200)
+  type              CouponType
+  /// PERCENT: pontos-base (1000 = 10%). FIXED: centavos. FREE_SHIPPING: ignorado.
+  value             Int        @default(0)
+  minSubtotalCents  Int        @default(0)
+  maxDiscountCents  Int?
+  startsAt          DateTime?
+  endsAt            DateTime?
+  maxRedemptions    Int?
+  maxPerUser        Int?       @default(1)
+  isActive          Boolean    @default(true)
+  deletedAt         DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  redemptions CouponRedemption[]
+  orders      Order[]
+}
+
+/// Uso de cupom vinculado a um pedido. Removido se o pedido expirar/for cancelado sem pagamento.
+model CouponRedemption {
+  id            String   @id @default(cuid())
+  couponId      String
+  orderId       String   @unique
+  userId        String
+  discountCents Int
+  createdAt     DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([couponId, userId])
+}
+
+// -----------------------------------------------------------------------------
+// Frete
+// -----------------------------------------------------------------------------
+
+/// Tabela de frete por faixa de CEP, gerenciada pelo administrador.
+model ShippingZone {
+  id             String   @id @default(cuid())
+  name           String   @db.VarChar(80)
+  carrier        String   @db.VarChar(60)
+  serviceName    String   @db.VarChar(60)
+  zipStart       Int
+  zipEnd         Int
+  priceCents     Int
+  /// Frete grátis a partir deste subtotal (opcional).
+  freeAboveCents Int?
+  minDays        Int
+  maxDays        Int
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([isActive, zipStart, zipEnd])
+}
+
+// -----------------------------------------------------------------------------
+// Pedidos
+// -----------------------------------------------------------------------------
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  EXPIRED
+  REFUNDED
+}
+
+model Order {
+  id                   String      @id @default(cuid())
+  /// Número legível exibido ao cliente (#1001, #1002…).
+  number               Int         @unique @default(autoincrement())
+  userId               String
+  status               OrderStatus @default(PENDING_PAYMENT)
+
+  subtotalCents        Int
+  discountCents        Int         @default(0)
+  shippingCents        Int         @default(0)
+  totalCents           Int
+
+  couponId             String?
+  couponCode           String?     @db.VarChar(40)
+
+  customerName         String      @db.VarChar(120)
+  customerEmail        String      @db.VarChar(254)
+  customerDocument     String      @db.VarChar(14)
+  customerPhone        String?     @db.VarChar(20)
+  /// Snapshot do endereço de entrega no momento da compra.
+  shippingAddress      Json
+
+  shippingZoneId       String?
+  shippingCarrier      String?     @db.VarChar(60)
+  shippingService      String?     @db.VarChar(60)
+  shippingMinDays      Int?
+  shippingMaxDays      Int?
+
+  /// Até quando o estoque fica reservado aguardando pagamento.
+  reservationExpiresAt DateTime?
+  paidAt               DateTime?
+  cancelledAt          DateTime?
+  notes                String?     @db.VarChar(1000)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  coupon             Coupon?              @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  shippingZone       ShippingZone?        @relation(fields: [shippingZoneId], references: [id], onDelete: SetNull)
+  items              OrderItem[]
+  payments           Payment[]
+  statusHistory      OrderStatusHistory[]
+  shipment           Shipment?
+  couponRedemption   CouponRedemption?
+  inventoryMovements InventoryMovement[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([status, reservationExpiresAt])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  variantId      String?
+  productId      String?
+  productName    String   @db.VarChar(160)
+  variantName    String   @db.VarChar(120)
+  sku            String   @db.VarChar(64)
+  imageUrl       String?  @db.VarChar(1024)
+  unitPriceCents Int
+  quantity       Int
+  totalCents     Int
+  createdAt      DateTime @default(now())
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model OrderStatusHistory {
+  id         String       @id @default(cuid())
+  orderId    String
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  note       String?      @db.VarChar(500)
+  actorId    String?
+  createdAt  DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// Pagamentos
+// -----------------------------------------------------------------------------
+
+enum PaymentProvider {
+  MERCADO_PAGO
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+  BOLETO
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  IN_PROCESS
+  APPROVED
+  REJECTED
+  CANCELLED
+  REFUNDED
+  CHARGED_BACK
+  EXPIRED
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  orderId           String
+  provider          PaymentProvider @default(MERCADO_PAGO)
+  /// ID do pagamento no provedor. Único: impede registrar o mesmo pagamento duas vezes.
+  providerPaymentId String?         @unique @db.VarChar(64)
+  /// Chave de idempotência enviada ao provedor (X-Idempotency-Key).
+  idempotencyKey    String          @unique @db.VarChar(64)
+  method            PaymentMethod
+  status            PaymentStatus   @default(PENDING)
+  statusDetail      String?         @db.VarChar(120)
+  amountCents       Int
+  installments      Int             @default(1)
+  refundedCents     Int             @default(0)
+  pixQrCode         String?         @db.Text
+  pixQrCodeBase64   String?         @db.Text
+  ticketUrl         String?         @db.VarChar(1024)
+  cardLastFour      String?         @db.Char(4)
+  cardBrand         String?         @db.VarChar(40)
+  expiresAt         DateTime?
+  approvedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  events  PaymentEvent[]
+  refunds Refund[]
+
+  @@index([orderId])
+  @@index([status, createdAt])
+}
+
+/// Registro imutável de cada notificação/consulta do provedor (trilha financeira).
+model PaymentEvent {
+  id                String          @id @default(cuid())
+  provider          PaymentProvider @default(MERCADO_PAGO)
+  /// Chave de deduplicação (x-request-id do webhook ou id sintético).
+  eventKey          String          @db.VarChar(128)
+  source            String          @db.VarChar(20)
+  type              String          @db.VarChar(60)
+  action            String?         @db.VarChar(60)
+  providerPaymentId String?         @db.VarChar(64)
+  paymentId         String?
+  statusReported    String?         @db.VarChar(40)
+  signatureValid    Boolean         @default(false)
+  processedAt       DateTime?
+  error             String?         @db.VarChar(500)
+  /// Payload resumido, sem dados sensíveis.
+  payload           Json?
+  createdAt         DateTime        @default(now())
+
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, eventKey])
+  @@index([providerPaymentId])
+  @@index([paymentId])
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Refund {
+  id               String       @id @default(cuid())
+  paymentId        String
+  providerRefundId String?      @unique @db.VarChar(64)
+  amountCents      Int
+  status           RefundStatus @default(PENDING)
+  reason           String?      @db.VarChar(300)
+  actorId          String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+}
+
+// -----------------------------------------------------------------------------
+// Entrega
+// -----------------------------------------------------------------------------
+
+enum ShipmentStatus {
+  PENDING
+  POSTED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RETURNED
+  FAILED
+}
+
+model Shipment {
+  id           String         @id @default(cuid())
+  orderId      String         @unique
+  carrier      String?        @db.VarChar(60)
+  service      String?        @db.VarChar(60)
+  trackingCode String?        @db.VarChar(60)
+  trackingUrl  String?        @db.VarChar(1024)
+  status       ShipmentStatus @default(PENDING)
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  order  Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  events ShipmentEvent[]
+
+  @@index([trackingCode])
+}
+
+/// Movimentação registrada pela equipe com base na transportadora (nunca simulada).
+model ShipmentEvent {
+  id          String         @id @default(cuid())
+  shipmentId  String
+  status      ShipmentStatus
+  description String         @db.VarChar(300)
+  location    String?        @db.VarChar(120)
+  occurredAt  DateTime
+  actorId     String?
+  createdAt   DateTime       @default(now())
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId, occurredAt])
+}
+
+// -----------------------------------------------------------------------------
+// Conteúdo e configurações
+// -----------------------------------------------------------------------------
+
+model Banner {
+  id        String    @id @default(cuid())
+  title     String    @db.VarChar(120)
+  subtitle  String?   @db.VarChar(240)
+  imageUrl  String?   @db.VarChar(1024)
+  linkUrl   String?   @db.VarChar(512)
+  ctaLabel  String?   @db.VarChar(40)
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  url          String   @db.VarChar(1024)
+  pathname     String   @db.VarChar(512)
+  mimeType     String   @db.VarChar(60)
+  sizeBytes    Int
+  alt          String?  @db.VarChar(200)
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Configuração única da loja (linha com id = "default").
+model StoreSettings {
+  id                     String   @id @default("default")
+  storeName              String   @default("Óculos Meta Store") @db.VarChar(80)
+  legalName              String?  @db.VarChar(160)
+  cnpj                   String?  @db.VarChar(18)
+  contactEmail           String?  @db.VarChar(254)
+  contactPhone           String?  @db.VarChar(30)
+  whatsapp               String?  @db.VarChar(30)
+  address                String?  @db.VarChar(300)
+  instagramUrl           String?  @db.VarChar(255)
+  businessHours          String?  @db.VarChar(160)
+  privacyPolicy          String?  @db.Text
+  termsOfUse             String?  @db.Text
+  returnPolicy           String?  @db.Text
+  aboutText              String?  @db.Text
+  /// Tempo de validade do QR Code PIX e da reserva de estoque.
+  pixExpirationMinutes   Int      @default(30)
+  maxInstallments        Int      @default(12)
+  updatedAt              DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String   @db.VarChar(80)
+  entityType String   @db.VarChar(60)
+  entityId   String?  @db.VarChar(64)
+  metadata   Json?
+  ipHash     String?  @db.VarChar(64)
+  createdAt  DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String    @db.VarChar(120)
+  email     String    @db.VarChar(254)
+  subject   String    @db.VarChar(160)
+  message   String    @db.VarChar(4000)
+  handledAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// LGPD
+// -----------------------------------------------------------------------------
+
+enum ConsentType {
+  TERMS
+  PRIVACY
+  COOKIES_ANALYTICS
+  MARKETING
+}
+
+model ConsentRecord {
+  id          String      @id @default(cuid())
+  userId      String?
+  anonymousId String?     @db.VarChar(64)
+  type        ConsentType
+  version     String      @db.VarChar(20)
+  granted     Boolean
+  ipHash      String?     @db.VarChar(64)
+  userAgent   String?     @db.VarChar(512)
+  createdAt   DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, type])
+}
+
+enum DataRequestType {
+  ACCESS
+  DELETION
+}
+
+enum DataRequestStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}
+
+model DataRequest {
+  id          String            @id @default(cuid())
+  userId      String
+  type        DataRequestType
+  status      DataRequestStatus @default(PENDING)
+  notes       String?           @db.VarChar(1000)
+  completedAt DateTime?
+  createdAt   DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// Infraestrutura
+// -----------------------------------------------------------------------------
+
+/// Contadores de rate limit (janela fixa), compartilhados entre instâncias serverless.
+model RateLimitBucket {
+  key     String   @id @db.VarChar(200)
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}

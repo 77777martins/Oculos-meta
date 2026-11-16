@@ -1,0 +1,33 @@
+# dependências
+node_modules/
+.pnp*
+
+# build
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# testes
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# segredos — NUNCA versionar
+.env
+.env.*
+!.env.example
+
+# uploads locais (somente desenvolvimento)
+public/uploads/
+
+# sistema / editores
+.DS_Store
+*.log
+.vercel
+.idea/
+.vscode/*
+!.vscode/extensions.json
