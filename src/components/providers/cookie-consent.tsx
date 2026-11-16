@@ -40,23 +40,23 @@ export function CookieConsent() {
   }
 
   return (
-    <div role="dialog" aria-live="polite" aria-label="Aviso de cookies" className="fixed inset-x-3 bottom-3 z-[90] mx-auto max-w-3xl animate-fade-up rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lift backdrop-blur sm:inset-x-6 sm:p-6">
+    <div role="dialog" aria-live="polite" aria-label="Aviso de cookies" className="fixed inset-x-3 bottom-3 z-[90] mx-auto max-w-3xl animate-fade-up border border-slate-200 bg-white p-5 shadow-[0_24px_48px_-16px_rgb(10_15_30/0.3)] sm:inset-x-6 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-1 gap-3">
-          <Cookie className="mt-0.5 size-5 shrink-0 text-brand-600" aria-hidden />
+          <Cookie className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden />
           <p className="text-sm text-slate-700">
             Usamos cookies essenciais para login, carrinho e segurança. Com sua permissão, também poderemos usar cookies de análise para melhorar a loja.{" "}
-            <Link href="/politica-de-privacidade" className="font-semibold text-brand-700 underline-offset-2 hover:underline">
+            <Link href="/politica-de-privacidade" className="font-semibold text-ink underline underline-offset-2 hover:underline">
               Saiba mais
             </Link>
             .
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" onClick={() => decide(false)}>
+          <Button variant="outline" size="sm" className="rounded-none" onClick={() => decide(false)}>
             Só essenciais
           </Button>
-          <Button size="sm" onClick={() => decide(true)}>
+          <Button variant="dark" size="sm" className="rounded-none" onClick={() => decide(true)}>
             Aceitar
           </Button>
         </div>

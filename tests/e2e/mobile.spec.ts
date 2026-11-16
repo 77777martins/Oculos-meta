@@ -6,6 +6,6 @@ test("layout mobile: menu, sem rolagem horizontal", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
   await page.getByRole("button", { name: "Abrir menu" }).click();
   await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Modelos", exact: true }).click();
+  await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Todos os modelos", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Todos os modelos" })).toBeVisible();
 });

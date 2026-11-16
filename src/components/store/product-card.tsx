@@ -9,7 +9,7 @@ export function ProductCard({ product, priority }: { product: ProductCardData; p
   return (
     <article className="group relative">
       <Link href={`/produtos/${product.slug}`} className="block" aria-label={`${product.name} — ver detalhes`}>
-        <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 via-white to-brand-50 ring-1 ring-slate-100 transition-all duration-500 group-hover:shadow-lift group-hover:ring-brand-100">
+        <div className="relative aspect-[4/5] overflow-hidden bg-slate-50 transition-colors duration-500 group-hover:bg-slate-100">
           {product.image ? (
             <>
               <Image
@@ -36,7 +36,7 @@ export function ProductCard({ product, priority }: { product: ProductCardData; p
         </div>
         <div className="mt-4 space-y-1 px-1">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{product.brand}</p>
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink group-hover:text-brand-700">{product.name}</h3>
+          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink underline-offset-4 group-hover:underline">{product.name}</h3>
           {product.colors.length > 0 && (
             <div className="flex items-center gap-1.5 pt-1" aria-label={`${product.colors.length} cores disponíveis`}>
               {product.colors.map((c, i) => (

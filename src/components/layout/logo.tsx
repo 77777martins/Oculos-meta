@@ -59,7 +59,7 @@ export function Logo({
         {tagline && (
           <span
             className={cn(
-              "mt-1.5 whitespace-nowrap text-[8.5px] font-medium uppercase tracking-[0.32em]",
+              "mt-1.5 hidden whitespace-nowrap text-[8.5px] sm:block font-medium uppercase tracking-[0.32em]",
               inverted ? "text-white/60" : "text-ink/55",
             )}
           >
