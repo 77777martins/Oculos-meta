@@ -96,7 +96,8 @@ async function demo() {
 async function main() {
   await base();
   if (process.env.SEED_DEMO === "true") {
-    if (process.env.NODE_ENV === "production") throw new Error("Dados de demonstração não podem ser criados em produção.");
+    // Em produção, só em implantação explicitamente marcada como demonstração (exibe aviso no site).
+    if (process.env.NODE_ENV === "production" && process.env.DEMO_MODE !== "true") throw new Error("Dados de demonstração exigem DEMO_MODE=true em produção.");
     await demo();
     console.log("Seed base + DEMONSTRAÇÃO concluído.");
   } else {

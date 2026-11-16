@@ -1,7 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then npx prisma migrate deploy; fi && npm run build",
-  "regions": ["gru1"],
-  "crons": [{ "path": "/api/cron/expire-orders", "schedule": "0 6 * * *" }]
+  "buildCommand": "bash scripts/vercel-build.sh",
+  "regions": [
+    "gru1"
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/expire-orders",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }

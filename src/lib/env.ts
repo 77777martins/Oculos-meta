@@ -33,6 +33,8 @@ const schema = z.object({
   MELHORENVIO_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
   /** Obrigatório pelo Melhor Envio: "Nome da aplicação (email de contato técnico)". */
   MELHORENVIO_USER_AGENT: optional,
+  /** Implantação de demonstração: aviso fixo no site e bloqueio de indexação. */
+  DEMO_MODE: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
 });
 
 export type ServerEnv = z.infer<typeof schema>;

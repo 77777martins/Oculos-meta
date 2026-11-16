@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   applicationName: "Óculos Meta Store",
   openGraph: { type: "website", locale: "pt_BR", siteName: "Óculos Meta Store", url: appUrl },
   twitter: { card: "summary_large_image" },
-  robots: { index: true, follow: true },
+  robots: process.env.DEMO_MODE === "true" ? { index: false, follow: false } : { index: true, follow: true },
   formatDetection: { telephone: false },
 };
 
