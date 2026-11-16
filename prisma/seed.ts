@@ -93,12 +93,48 @@ async function demo() {
   }
 }
 
+/**
+ * Fotos reais de demonstração com licença livre (Wikimedia Commons), com crédito.
+ * Só modelos com foto livre verificada; os demais mantêm a ilustração.
+ */
+const DEMO_IMAGES: Record<string, Array<{ url: string; alt: string; variantSku: string | null; credit: string; creditUrl: string }>> = {
+  "demo-ray-ban-meta-wayfarer": [
+    {
+      url: "/images/produtos/ray-ban-meta-wayfarer-gen1-preto.webp",
+      alt: "Óculos Ray-Ban Meta Wayfarer (1ª geração) preto brilhante com estojo marrom",
+      variantSku: "DEMO-RBW-PRETO",
+      credit: "Foto: CCadio / Wikimedia Commons — CC BY 4.0 (redimensionada)",
+      creditUrl: "https://commons.wikimedia.org/wiki/File:Ray-Ban_Meta_Gen_1_smart_glasses_with_charging_case.jpg",
+    },
+  ],
+};
+
+/** Anexa as fotos de demonstração apenas a produtos que ainda não têm imagens (idempotente). */
+async function syncDemoImages() {
+  for (const [slug, images] of Object.entries(DEMO_IMAGES)) {
+    const product = await db.product.findUnique({ where: { slug }, include: { variants: true, _count: { select: { images: true } } } });
+    if (!product || product._count.images > 0) continue;
+    await db.productImage.createMany({
+      data: images.map((img, i) => ({
+        productId: product.id,
+        variantId: img.variantSku ? (product.variants.find((v) => v.sku === img.variantSku)?.id ?? null) : null,
+        url: img.url,
+        alt: img.alt,
+        credit: img.credit,
+        creditUrl: img.creditUrl,
+        sortOrder: i,
+      })),
+    });
+  }
+}
+
 async function main() {
   await base();
   if (process.env.SEED_DEMO === "true") {
     // Em produção, só em implantação explicitamente marcada como demonstração (exibe aviso no site).
     if (process.env.NODE_ENV === "production" && process.env.DEMO_MODE !== "true") throw new Error("Dados de demonstração exigem DEMO_MODE=true em produção.");
     await demo();
+    await syncDemoImages();
     console.log("Seed base + DEMONSTRAÇÃO concluído.");
   } else {
     console.log("Seed base concluído (use SEED_DEMO=true para dados de demonstração em desenvolvimento).");

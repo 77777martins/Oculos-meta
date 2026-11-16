@@ -17,11 +17,11 @@ export function ProductCard({ product, priority }: { product: ProductCardData; p
                 alt={product.image.alt}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover transition-all duration-700 group-hover:scale-[1.04]"
+                className="object-contain p-4 transition-all duration-700 group-hover:scale-[1.04]"
                 priority={priority}
               />
               {product.hoverImage && (
-                <Image src={product.hoverImage.url} alt="" fill sizes="25vw" className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
+                <Image src={product.hoverImage.url} alt="" fill sizes="25vw" className="object-contain p-4 opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
               )}
             </>
           ) : (

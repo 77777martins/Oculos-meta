@@ -93,6 +93,8 @@ export async function saveProduct(id: string | null, data: ProductData, actorId:
             variantId: img.variantSku ? (idBySku.get(img.variantSku) ?? null) : null,
             url: img.url,
             alt: img.alt,
+            credit: img.credit,
+            creditUrl: img.creditUrl ?? null,
             sortOrder: i,
           })),
         });

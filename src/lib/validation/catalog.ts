@@ -35,6 +35,9 @@ export const productImageSchema = z.strictObject({
     .optional()
     .nullable()
     .transform((v) => v || null),
+  /** Crédito/licença da imagem (obrigatório por licenças como CC BY). */
+  credit: optionalText(300),
+  creditUrl: safeUrlSchema.optional().nullable().or(z.literal("").transform(() => null)),
 });
 
 export const productSchema = z.strictObject({

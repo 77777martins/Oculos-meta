@@ -29,7 +29,7 @@ interface Variant {
 interface Props {
   product: { id: string; name: string; brand: string; model: string; shortDescription: string | null };
   variants: Variant[];
-  images: Array<{ id: string; url: string; alt: string; variantId: string | null }>;
+  images: Array<{ id: string; url: string; alt: string; variantId: string | null; credit?: string | null; creditUrl?: string | null }>;
   maxInstallments: number;
   isFavorite: boolean;
   isLoggedIn: boolean;
@@ -42,8 +42,10 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
   const variant = variants.find((v) => v.id === variantId) ?? variants[0];
 
   const gallery = useMemo(() => {
+    // Só fotos desta variante + fotos gerais: nunca mostra a foto de OUTRA cor/variante.
     const specific = images.filter((i) => i.variantId === variantId);
-    return specific.length > 0 ? [...specific, ...images.filter((i) => !i.variantId)] : images;
+    const general = images.filter((i) => !i.variantId);
+    return [...specific, ...general];
   }, [images, variantId]);
   const [activeImage, setActiveImage] = useState(0);
   const current = gallery[Math.min(activeImage, gallery.length - 1)];
@@ -70,13 +72,24 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
       <div className="lg:sticky lg:top-24 lg:self-start">
         <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-50 via-white to-brand-50 ring-1 ring-slate-100">
           {current ? (
-            <Image key={current.id} src={current.url} alt={current.alt} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="animate-fade-up object-cover" />
+            <Image key={current.id} src={current.url} alt={current.alt} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="animate-fade-up object-contain p-6" />
           ) : (
             <div className="flex h-full items-center justify-center p-12">
               <GlassesArt />
             </div>
           )}
         </div>
+        {current?.credit && (
+          <p className="mt-2 text-right text-[11px] text-slate-500">
+            {current.creditUrl ? (
+              <a href={current.creditUrl} target="_blank" rel="noopener noreferrer" className="hover:text-ink hover:underline">
+                {current.credit}
+              </a>
+            ) : (
+              current.credit
+            )}
+          </p>
+        )}
         {gallery.length > 1 && (
           <div className="mt-4 flex gap-3 overflow-x-auto pb-1" role="tablist" aria-label="Imagens do produto">
             {gallery.map((img, i) => (

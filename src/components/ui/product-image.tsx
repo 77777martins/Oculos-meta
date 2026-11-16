@@ -14,7 +14,7 @@ export function ProductImage({ src, alt, className, sizes, priority }: { src: st
   }
   return (
     <div className={cn("relative overflow-hidden bg-slate-50", className)}>
-      <Image src={src} alt={alt} fill sizes={sizes ?? "(max-width: 768px) 50vw, 25vw"} className="object-cover" priority={priority} />
+      <Image src={src} alt={alt} fill sizes={sizes ?? "(max-width: 768px) 50vw, 25vw"} className="object-contain p-1" priority={priority} />
     </div>
   );
 }

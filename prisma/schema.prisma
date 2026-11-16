@@ -209,6 +209,10 @@ model ProductImage {
   alt       String   @db.VarChar(200)
   width     Int?
   height    Int?
+  /// Crédito exigido por licenças livres (ex.: "Foto: Autor / Wikimedia Commons — CC BY 4.0").
+  credit    String?  @db.VarChar(300)
+  /// Página de origem da imagem (autor e licença completos).
+  creditUrl String?  @db.VarChar(1024)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 

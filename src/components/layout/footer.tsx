@@ -63,6 +63,7 @@ export async function Footer() {
             ["/sobre", "Sobre nós"],
             ["/politica-de-privacidade", "Privacidade"],
             ["/termos-de-uso", "Termos de uso"],
+            ["/creditos-imagens", "Créditos das imagens"],
           ]}
         />
         <div className="md:col-span-2">
