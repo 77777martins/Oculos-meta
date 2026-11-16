@@ -30,6 +30,7 @@ export interface ProductCardData {
   model: string;
   brand: string;
   category: string | null;
+  categorySlug: string | null;
   image: { url: string; alt: string } | null;
   hoverImage: { url: string; alt: string } | null;
   priceCents: number;
@@ -48,6 +49,7 @@ function toCard(p: CardProduct): ProductCardData {
     model: p.model,
     brand: p.brand,
     category: p.category?.name ?? null,
+    categorySlug: p.category?.slug ?? null,
     image: p.images[0] ?? null,
     hoverImage: p.images[1] ?? null,
     priceCents: cheapest ? effectivePriceCents(cheapest) : 0,

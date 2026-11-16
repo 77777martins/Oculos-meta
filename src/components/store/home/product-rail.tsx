@@ -1,84 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { ProductCard } from "@/components/store/product-card";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { GlassesArt } from "@/components/ui/glasses-art";
+import { Price } from "@/components/ui/price";
 import type { ProductCardData } from "@/server/services/catalog";
 
-const ALL = "Todos";
-
 /**
- * Vitrine em faixa rolável com abas por coleção. A rolagem usa scroll-snap
- * nativo (funciona com toque, trackpad e teclado); as setas só aceleram no desktop.
+ * Faixa horizontal de produtos em painel branco. Rolagem nativa com scroll-snap
+ * (toque, trackpad e teclado); as setas aparecem só no desktop.
  */
 export function ProductRail({ title, products, viewAllHref }: { title: string; products: ProductCardData[]; viewAllHref: string }) {
-  const tabs = useMemo(() => [ALL, ...new Set(products.map((p) => p.category).filter((c): c is string => !!c))], [products]);
-  const [tab, setTab] = useState(ALL);
-  const scroller = useRef<HTMLDivElement>(null);
-  const visible = tab === ALL ? products : products.filter((p) => p.category === tab);
+  const scroller = useRef<HTMLUListElement>(null);
+  if (products.length === 0) return null;
 
   const scrollBy = (dir: 1 | -1) => {
     const el = scroller.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: "smooth" });
   };
 
   return (
-    <section className="container-page py-16 sm:py-20" aria-labelledby="vitrine-titulo">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h2 id="vitrine-titulo" className="text-2xl font-semibold uppercase tracking-[0.08em] sm:text-3xl">
-          {title}
-        </h2>
-        <Link href={viewAllHref} className="inline-flex items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline">
-          Ver todos <ArrowRight className="size-4" aria-hidden />
+    <section className="group/rail relative bg-white p-5" aria-label={title}>
+      <div className="flex items-baseline gap-4">
+        <h2 className="text-xl font-bold">{title}</h2>
+        <Link href={viewAllHref} className="text-sm font-medium text-brand-700 hover:underline">
+          Ver mais
         </Link>
       </div>
-
-      {tabs.length > 2 && (
-        <div role="tablist" aria-label="Filtrar por coleção" className="mt-6 flex gap-6 overflow-x-auto border-b border-slate-200">
-          {tabs.map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="tab"
-              aria-selected={t === tab}
-              aria-controls="vitrine-lista"
-              onClick={() => {
-                setTab(t);
-                scroller.current?.scrollTo({ left: 0 });
-              }}
-              className={cn(
-                "-mb-px whitespace-nowrap border-b-2 pb-3 text-sm font-semibold transition-colors",
-                t === tab ? "border-ink text-ink" : "border-transparent text-slate-500 hover:text-ink",
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="relative mt-8">
-        <div
-          id="vitrine-lista"
-          ref={scroller}
-          role="tabpanel"
-          className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-4 sm:-mx-6 sm:gap-6 sm:px-6 lg:mx-0 lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {visible.map((p, i) => (
-            <div key={p.id} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-[calc(25%-18px)]">
-              <ProductCard product={p} priority={i < 2} />
-            </div>
-          ))}
-        </div>
-        {visible.length > 4 && (
-          <>
-            <RailArrow side="left" onClick={() => scrollBy(-1)} />
-            <RailArrow side="right" onClick={() => scrollBy(1)} />
-          </>
-        )}
-      </div>
+      <ul ref={scroller} className="mt-4 flex snap-x gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:thin]">
+        {products.map((p, i) => (
+          <li key={p.id} className="w-40 shrink-0 snap-start sm:w-52">
+            <Link href={`/produtos/${p.slug}`} className="group block" aria-label={`${p.name} — ver detalhes`}>
+              <div className="relative aspect-square bg-slate-50">
+                {p.image ? (
+                  <Image src={p.image.url} alt={p.image.alt} fill sizes="208px" priority={i < 2} className="object-contain p-3" />
+                ) : (
+                  <div className="flex h-full items-center justify-center p-4">
+                    <GlassesArt />
+                  </div>
+                )}
+                {!p.inStock && <span className="absolute left-2 top-2 bg-ink px-2 py-0.5 text-[11px] font-semibold text-white">Esgotado</span>}
+                {p.inStock && p.listPriceCents > p.priceCents && <span className="absolute left-2 top-2 bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">Oferta</span>}
+              </div>
+              <p className="mt-2 line-clamp-2 text-sm text-slate-800 group-hover:text-brand-700">{p.name}</p>
+              <Price cents={p.priceCents} listCents={p.listPriceCents} size="sm" className="mt-1" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <RailArrow side="left" onClick={() => scrollBy(-1)} />
+      <RailArrow side="right" onClick={() => scrollBy(1)} />
     </section>
   );
 }
@@ -90,12 +63,9 @@ function RailArrow({ side, onClick }: { side: "left" | "right"; onClick: () => v
       type="button"
       onClick={onClick}
       aria-label={side === "left" ? "Ver anteriores" : "Ver próximos"}
-      className={cn(
-        "absolute top-[38%] hidden size-11 -translate-y-1/2 items-center justify-center border border-slate-200 bg-white shadow-sm transition-colors hover:border-ink lg:flex",
-        side === "left" ? "-left-5" : "-right-5",
-      )}
+      className={`absolute top-1/2 hidden h-24 w-11 -translate-y-1/2 items-center justify-center border border-slate-200 bg-white/95 opacity-0 shadow transition-opacity focus-visible:opacity-100 group-hover/rail:opacity-100 lg:flex ${side === "left" ? "left-0 rounded-r-md" : "right-0 rounded-l-md"}`}
     >
-      <Icon className="size-5" />
+      <Icon className="size-6" />
     </button>
   );
 }

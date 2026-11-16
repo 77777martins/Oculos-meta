@@ -1,94 +1,118 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Camera, CreditCard, Headphones, Mic, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import { CreditCard, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { GlassesArt } from "@/components/ui/glasses-art";
+import { formatBRL } from "@/lib/money";
+import type { ProductCardData } from "@/server/services/catalog";
 
-interface TileCategory {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  imageUrl: string | null;
-}
-
-/** Blocos grandes de coleção, lado a lado (o primeiro ocupa mais espaço quando há 3). */
-export function CollectionTiles({ categories }: { categories: TileCategory[] }) {
-  if (categories.length === 0) return null;
-  const items = categories.slice(0, 3);
+/** Cartão branco da home: título, conteúdo e link de rodapé. */
+function HomeCard({ title, footer, children }: { title: string; footer?: { href: string; label: string }; children: React.ReactNode }) {
   return (
-    <section className="container-page pt-16 sm:pt-20" aria-labelledby="colecoes-titulo">
-      <h2 id="colecoes-titulo" className="text-2xl font-semibold uppercase tracking-[0.08em] sm:text-3xl">
-        Compre por coleção
-      </h2>
-      <div className={`mt-8 grid gap-4 sm:gap-6 ${items.length >= 3 ? "lg:grid-cols-3" : "sm:grid-cols-2"}`}>
-        {items.map((c, i) => (
-          <Link key={c.id} href={`/categorias/${c.slug}`} className="group relative flex aspect-[4/3] flex-col justify-end overflow-hidden bg-ink p-6 text-white sm:aspect-[16/10] lg:aspect-[4/5]">
-            {c.imageUrl ? (
-              <Image src={c.imageUrl} alt="" fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            ) : (
-              <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_70%_30%,rgb(37_71_234/0.45),transparent_70%)]">
-                <div className="absolute left-1/2 top-[38%] w-[78%] -translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-105" style={{ rotate: `${(i % 3) * 4 - 4}deg` }}>
-                  <GlassesArt tone="light" />
-                </div>
-              </div>
-            )}
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink/80 to-transparent" />
-            <div className="relative">
-              <h3 className="text-2xl font-semibold">{c.name}</h3>
-              {c.description && <p className="mt-1 line-clamp-2 max-w-sm text-sm text-white/75">{c.description}</p>}
-              <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold uppercase tracking-[0.12em] underline-offset-4 group-hover:underline">
-                Comprar agora <ArrowRight className="size-4" aria-hidden />
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
+    <div className="flex flex-col bg-white p-5">
+      <h2 className="text-xl font-bold leading-tight">{title}</h2>
+      <div className="mt-3 flex-1">{children}</div>
+      {footer && (
+        <Link href={footer.href} className="mt-4 text-sm font-medium text-brand-700 hover:text-brand-800 hover:underline">
+          {footer.label}
+        </Link>
+      )}
+    </div>
   );
 }
 
-/** Bloco editorial dividido: arte de um lado, texto e recursos do outro. */
-export function EditorialSplit() {
-  const features = [
-    { icon: Camera, title: "Registre sem pegar o celular", text: "Fotos e vídeos do seu ponto de vista." },
-    { icon: Headphones, title: "Áudio aberto", text: "Música e chamadas sem tampar os ouvidos." },
-    { icon: Mic, title: "Comandos de voz", text: "Peça ajuda ao assistente com as mãos livres." },
+function Thumb({ product }: { product: ProductCardData | null }) {
+  return (
+    <div className="relative aspect-square bg-slate-50">
+      {product?.image ? (
+        <Image src={product.image.url} alt="" fill sizes="(max-width: 640px) 45vw, 160px" className="object-contain p-2" />
+      ) : (
+        <div className="flex h-full items-center justify-center p-3">
+          <GlassesArt />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Cartão de coleção em grade 2×2 com os modelos da coleção. Sem produtos suficientes,
+ * mostra um único bloco com a ilustração (não repete o mesmo produto para preencher).
+ */
+export function CollectionCard({ name, slug, products }: { name: string; slug: string; products: ProductCardData[] }) {
+  const items = products.slice(0, 4);
+  return (
+    <HomeCard title={name} footer={{ href: `/categorias/${slug}`, label: items.length > 0 ? "Ver todos" : "Conhecer a coleção" }}>
+      {items.length >= 2 ? (
+        <ul className="grid grid-cols-2 gap-x-3 gap-y-3">
+          {items.map((p) => (
+            <li key={p.id}>
+              <Link href={`/produtos/${p.slug}`} className="group block">
+                <Thumb product={p} />
+                <p className="mt-1 line-clamp-1 text-xs text-slate-700 group-hover:text-brand-700">{p.model}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Link href={items[0] ? `/produtos/${items[0].slug}` : `/categorias/${slug}`} className="group block">
+          <div className="relative aspect-[4/3.6] bg-slate-50">
+            {items[0]?.image ? (
+              <Image src={items[0].image.url} alt="" fill sizes="(max-width: 640px) 90vw, 330px" className="object-contain p-4" />
+            ) : (
+              <div className="flex h-full items-center justify-center bg-ink p-8">
+                <GlassesArt tone="light" />
+              </div>
+            )}
+          </div>
+          {items[0] && (
+            <p className="mt-2 text-sm text-slate-700 group-hover:text-brand-700">
+              {items[0].name} · <strong>{formatBRL(items[0].priceCents)}</strong>
+            </p>
+          )}
+        </Link>
+      )}
+    </HomeCard>
+  );
+}
+
+/** Cartão de conta: convite para entrar ou atalhos para quem já está logado. */
+export function AccountCard({ firstName }: { firstName: string | null }) {
+  if (!firstName) {
+    return (
+      <HomeCard title="Entre e aproveite a loja">
+        <p className="text-sm text-slate-600">Acompanhe seus pedidos, salve favoritos e compre mais rápido.</p>
+        <Link href="/entrar" className="mt-5 flex h-10 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white hover:bg-brand-700">
+          Fazer login
+        </Link>
+        <Link href="/cadastro" className="mt-3 block text-center text-sm text-brand-700 hover:underline">
+          Novo cliente? Criar conta
+        </Link>
+      </HomeCard>
+    );
+  }
+  const links: Array<[string, string]> = [
+    ["/conta/pedidos", "Seus pedidos"],
+    ["/conta/favoritos", "Seus favoritos"],
+    ["/conta/enderecos", "Seus endereços"],
+    ["/conta", "Dados da conta"],
   ];
   return (
-    <section className="bg-slate-50" aria-labelledby="editorial-titulo">
-      <div className="container-page grid items-center gap-10 py-16 sm:py-20 lg:grid-cols-2 lg:gap-16">
-        <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-ink">
-          <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_45%,rgb(37_71_234/0.5),transparent_70%)]" />
-          <GlassesArt tone="light" className="relative w-3/4" />
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Tecnologia que você veste</p>
-          <h2 id="editorial-titulo" className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">
-            Mãos livres para viver o momento.
-          </h2>
-          <ul className="mt-8 space-y-6">
-            {features.map(({ icon: Icon, title, text }) => (
-              <li key={title} className="flex gap-4">
-                <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
-                <div>
-                  <p className="font-semibold">{title}</p>
-                  <p className="mt-1 text-sm text-slate-600">{text}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 text-xs text-slate-500">Recursos variam conforme o modelo. Consulte as especificações de cada produto.</p>
-          <Link href="/produtos" className="mt-8 inline-flex h-12 items-center bg-ink px-8 text-sm font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-slate-800">
-            Descobrir modelos
-          </Link>
-        </div>
-      </div>
-    </section>
+    <HomeCard title={`Olá, ${firstName}`}>
+      <ul className="grid grid-cols-2 gap-3">
+        {links.map(([href, label]) => (
+          <li key={href}>
+            <Link href={href} className="flex h-20 items-center justify-center bg-slate-50 p-2 text-center text-sm font-medium hover:bg-slate-100 hover:text-brand-700">
+              {label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </HomeCard>
   );
 }
 
 /** Faixa de serviços: só compromissos que a loja realmente cumpre. */
-export function ServicesStrip({ maxInstallments }: { maxInstallments: number }) {
+export function ServicesPanel({ maxInstallments }: { maxInstallments: number }) {
   const items = [
     { icon: Truck, title: "Entrega rastreada", text: "Acompanhe cada etapa na sua conta.", href: "/faq" },
     { icon: CreditCard, title: `Até ${maxInstallments}x no cartão`, text: "Ou PIX com aprovação imediata.", href: "/faq" },
@@ -96,15 +120,15 @@ export function ServicesStrip({ maxInstallments }: { maxInstallments: number }) 
     { icon: ShieldCheck, title: "Compra segura", text: "Pagamento processado pelo Mercado Pago.", href: "/faq" },
   ];
   return (
-    <section className="border-y border-slate-200" aria-label="Serviços da loja">
-      <ul className="container-page grid grid-cols-2 gap-x-6 gap-y-8 py-10 lg:grid-cols-4">
+    <section className="bg-white p-5" aria-label="Serviços da loja">
+      <ul className="grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4">
         {items.map(({ icon: Icon, title, text, href }) => (
           <li key={title}>
-            <Link href={href} className="group flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:text-left">
-              <Icon className="size-6 shrink-0" aria-hidden />
+            <Link href={href} className="group flex items-start gap-3">
+              <Icon className="mt-0.5 size-6 shrink-0 text-brand-700" aria-hidden />
               <div>
-                <p className="text-sm font-semibold underline-offset-4 group-hover:underline">{title}</p>
-                <p className="mt-1 text-xs text-slate-600 sm:text-sm">{text}</p>
+                <p className="text-sm font-bold group-hover:text-brand-700 group-hover:underline">{title}</p>
+                <p className="mt-0.5 text-xs text-slate-600 sm:text-sm">{text}</p>
               </div>
             </Link>
           </li>

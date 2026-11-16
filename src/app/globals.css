@@ -20,6 +20,8 @@
   --color-brand-950: #0b1437;
 
   --color-ink: #0a0f1e;
+  /* Faixa secundária do cabeçalho e topo do menu lateral. */
+  --color-ink-soft: #17213f;
   --color-surface: #f6f8fc;
 
   --radius-xl: 1rem;

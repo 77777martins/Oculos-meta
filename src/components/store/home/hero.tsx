@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface HeroSlide {
@@ -17,9 +18,9 @@ export interface HeroSlide {
 const ROTATE_MS = 7000;
 
 /**
- * Banner principal de tela cheia. Com mais de um banner ativo vira carrossel
- * (troca automática, pausa no hover/foco, sem animação para "menos movimento").
- * No celular a imagem fica em cima e o texto embaixo; no desktop o texto fica sobre a imagem.
+ * Carrossel principal de largura total. A base da imagem se funde ao fundo cinza
+ * da página, e os cartões da home sobem por cima dela (margem negativa na página).
+ * Troca automática com pausa no hover/foco e respeito a "reduzir movimento".
  */
 export function Hero({ slides }: { slides: HeroSlide[] }) {
   const [index, setIndex] = useState(0);
@@ -34,10 +35,11 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
   }, [count, paused]);
 
   if (count === 0) return null;
+  const go = (delta: number) => setIndex((i) => (i + delta + count) % count);
 
   return (
     <section
-      className="relative bg-ink text-white"
+      className="relative mx-auto max-w-[1500px] overflow-hidden"
       aria-roledescription={count > 1 ? "carrossel" : undefined}
       aria-label="Destaques da loja"
       onMouseEnter={() => setPaused(true)}
@@ -45,59 +47,47 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {slides.map((s, i) => (
-        <div
-          key={s.id}
-          role={count > 1 ? "group" : undefined}
-          aria-roledescription={count > 1 ? "slide" : undefined}
-          aria-label={count > 1 ? `${i + 1} de ${count}` : undefined}
-          aria-hidden={i !== index}
-          inert={i !== index}
-          className={cn("transition-opacity duration-700", i === index ? "relative opacity-100" : "absolute inset-0 opacity-0")}
-        >
-          <div className="relative aspect-[4/3] w-full sm:aspect-[16/9] lg:aspect-auto lg:h-[min(78vh,760px)]">
-            {s.imageUrl && (
-              <Image src={s.imageUrl} alt="" fill priority={i === 0} sizes="100vw" className="object-cover object-[72%_50%] lg:object-center" />
-            )}
-            {/* Escurece a área do texto no desktop para garantir contraste sobre qualquer imagem. */}
-            <div className="absolute inset-0 hidden bg-gradient-to-r from-ink/85 via-ink/40 to-transparent lg:block" />
-          </div>
-          <div className="lg:absolute lg:inset-0 lg:flex lg:items-center">
-            <div className="container-page py-10 lg:py-0">
-              <div className="max-w-xl">
+      <div className="relative h-[240px] sm:h-[340px] lg:h-[600px]">
+        {slides.map((s, i) => (
+          <div
+            key={s.id}
+            role={count > 1 ? "group" : undefined}
+            aria-roledescription={count > 1 ? "slide" : undefined}
+            aria-label={count > 1 ? `${i + 1} de ${count}` : undefined}
+            aria-hidden={i !== index}
+            inert={i !== index}
+            className={cn("absolute inset-0 bg-ink transition-opacity duration-700", i === index ? "opacity-100" : "opacity-0")}
+          >
+            {s.imageUrl && <Image src={s.imageUrl} alt="" fill priority={i === 0} sizes="(max-width: 1500px) 100vw, 1500px" className="object-cover object-[70%_50%]" />}
+            <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/30 to-transparent" />
+            <div className="absolute inset-x-0 top-0 px-5 pt-6 sm:px-12 sm:pt-12 lg:px-20 lg:pt-14">
+              <div className="max-w-[min(32rem,62%)] text-white">
                 {i === 0 ? (
-                  <h1 className="text-4xl font-semibold leading-[1.05] sm:text-5xl lg:text-6xl">{s.title}</h1>
+                  <h1 className="text-xl font-bold leading-tight sm:text-3xl lg:text-5xl">{s.title}</h1>
                 ) : (
-                  <h2 className="text-4xl font-semibold leading-[1.05] sm:text-5xl lg:text-6xl">{s.title}</h2>
+                  <h2 className="text-xl font-bold leading-tight sm:text-3xl lg:text-5xl">{s.title}</h2>
                 )}
-                {s.subtitle && <p className="mt-5 text-base leading-7 text-white/80 sm:text-lg">{s.subtitle}</p>}
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link href={s.linkUrl ?? "/produtos"} className="inline-flex h-12 items-center bg-white px-8 text-sm font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-white/85">
-                    {s.ctaLabel ?? "Comprar agora"}
-                  </Link>
-                  <Link href="/sobre" className="inline-flex h-12 items-center border border-white/70 px-8 text-sm font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-white hover:text-ink">
-                    Sobre a loja
-                  </Link>
-                </div>
+                {s.subtitle && <p className="mt-3 hidden text-lg text-white/85 lg:block">{s.subtitle}</p>}
+                <Link href={s.linkUrl ?? "/produtos"} className="mt-4 inline-flex h-9 items-center rounded-full bg-white px-5 text-sm font-semibold text-ink hover:bg-slate-100 sm:mt-6 sm:h-11 sm:px-7">
+                  {s.ctaLabel ?? "Comprar agora"}
+                </Link>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+        {/* Fusão com o fundo cinza da página: os cartões da home sobem sobre esta área. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-100 to-transparent" />
+      </div>
 
       {count > 1 && (
-        <div className="absolute bottom-4 right-4 z-10 flex gap-2 lg:bottom-8 lg:right-8">
-          {slides.map((s, i) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setIndex(i)}
-              aria-label={`Mostrar destaque ${i + 1}`}
-              aria-current={i === index}
-              className={cn("h-1 w-8 transition-colors", i === index ? "bg-white" : "bg-white/40 hover:bg-white/70")}
-            />
-          ))}
-        </div>
+        <>
+          <button type="button" onClick={() => go(-1)} aria-label="Destaque anterior" className="absolute left-0 top-0 hidden h-[250px] w-20 items-center justify-center text-white/90 hover:text-white focus-visible:outline-2 focus-visible:outline-white lg:flex">
+            <ChevronLeft className="size-12" strokeWidth={1.5} />
+          </button>
+          <button type="button" onClick={() => go(1)} aria-label="Próximo destaque" className="absolute right-0 top-0 hidden h-[250px] w-20 items-center justify-center text-white/90 hover:text-white focus-visible:outline-2 focus-visible:outline-white lg:flex">
+            <ChevronRight className="size-12" strokeWidth={1.5} />
+          </button>
+        </>
       )}
     </section>
   );

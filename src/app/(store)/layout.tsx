@@ -8,7 +8,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
     <>
       {env().DEMO_MODE && <DemoBanner />}
       <Header />
-      <main id="conteudo" className="min-h-[60vh]">
+      <main id="conteudo" className="min-h-[60vh] pb-24 has-[>.page-gray]:bg-slate-100">
         {children}
       </main>
       <Footer />
