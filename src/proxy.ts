@@ -18,6 +18,18 @@ const MP = {
   img: "https://*.mlstatic.com https://*.mercadopago.com https://*.mercadolibre.com",
 };
 
+/** Origem exata do Sentry derivada do DSN (sem curingas). */
+function sentryOrigin(): string {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return "";
+  try {
+    const u = new URL(dsn);
+    return u.protocol === "https:" ? ` https://${u.host}` : "";
+  } catch {
+    return "";
+  }
+}
+
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== "production";
   return [
@@ -26,7 +38,7 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: https://*.public.blob.vercel-storage.com ${MP.img}`,
     "font-src 'self' data:",
-    `connect-src 'self' ${MP.connect}${isDev ? " ws: wss:" : ""}`,
+    `connect-src 'self' ${MP.connect}${sentryOrigin()}${isDev ? " ws: wss:" : ""}`,
     `frame-src ${MP.frame}`,
     "frame-ancestors 'none'",
     "form-action 'self'",

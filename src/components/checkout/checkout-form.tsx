@@ -44,7 +44,7 @@ export function CheckoutForm({ addresses, defaultName, defaultPhone }: { address
   const items = useCartItems();
   const [addressId, setAddressId] = useState<string | "new">(addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? "new");
   const [newZip, setNewZip] = useState<string>();
-  const [shippingZoneId, setShippingZoneId] = useState<string>();
+  const [shippingOptionId, setShippingOptionId] = useState<string>();
   const [coupon, setCoupon] = useState<string | undefined>();
   const [saveAddress, setSaveAddress] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -63,7 +63,7 @@ export function CheckoutForm({ addresses, defaultName, defaultPhone }: { address
   const { quote, loading } = useCartQuote(items, zip, coupon);
 
   const options = quote?.shippingOptions ?? [];
-  const chosen = options.find((o) => o.id === shippingZoneId) ?? options[0];
+  const chosen = options.find((o) => o.id === shippingOptionId) ?? options[0];
 
   const customer = useForm<CustomerForm>({ resolver: zodResolver(customerSchema), defaultValues: { customerDocument: "", customerPhone: defaultPhone ?? "" } });
   const address = useForm<AddressForm>({
@@ -105,7 +105,7 @@ export function CheckoutForm({ addresses, defaultName, defaultPhone }: { address
         body: {
           items,
           ...(addressId === "new" ? { address: address.getValues(), saveAddress } : { addressId }),
-          shippingZoneId: chosen.id,
+          shippingOptionId: chosen.id,
           ...(quote?.coupon ? { couponCode: quote.coupon.code } : {}),
           customerDocument: c.customerDocument,
           customerPhone: c.customerPhone,
@@ -139,7 +139,7 @@ export function CheckoutForm({ addresses, defaultName, defaultPhone }: { address
           <h2 id="dados" className="flex items-center gap-3 text-lg font-semibold">
             <Step n={1} /> Seus dados
           </h2>
-          <p className="mt-1 text-sm text-slate-500">O CPF é exigido para emissão da nota fiscal e pelo processador de pagamentos.</p>
+          <p className="mt-1 text-sm text-slate-500">O CPF é exigido pelo processador de pagamentos (Mercado Pago) e pelas transportadoras.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <Input label="CPF" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" maxLength={14} {...customer.register("customerDocument")} error={customer.formState.errors.customerDocument?.message} />
             <Input label="Celular (com DDD)" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(11) 90000-0000" maxLength={16} {...customer.register("customerPhone")} error={customer.formState.errors.customerPhone?.message} />
@@ -217,7 +217,7 @@ export function CheckoutForm({ addresses, defaultName, defaultPhone }: { address
             <div className="mt-5 grid gap-3" role="radiogroup" aria-label="Opções de frete">
               {options.map((o) => (
                 <label key={o.id} className={cn("flex cursor-pointer items-center gap-3 rounded-2xl border p-4", chosen?.id === o.id ? "border-brand-600 bg-brand-50/50 ring-2 ring-brand-600/15" : "border-slate-200")}>
-                  <input type="radio" name="shipping" className="accent-brand-600" checked={chosen?.id === o.id} onChange={() => setShippingZoneId(o.id)} />
+                  <input type="radio" name="shipping" className="accent-brand-600" checked={chosen?.id === o.id} onChange={() => setShippingOptionId(o.id)} />
                   <Truck className="size-4 text-brand-600" aria-hidden />
                   <span className="flex-1 text-sm">
                     <span className="font-semibold">

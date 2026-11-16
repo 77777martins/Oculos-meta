@@ -8,6 +8,7 @@ import { purgeExpiredSessions } from "@/lib/auth/session";
 import { expireOrder, findExpiredPendingOrderIds } from "@/server/services/orders";
 import { syncProviderPayment } from "@/server/payments/service";
 import { getPaymentGateway } from "@/server/payments/mercadopago";
+import { syncOpenShipments } from "@/server/shipping/tracking-sync";
 
 /**
  * Tarefa agendada (Vercel Cron): expira pedidos não pagos, liberando estoque.
@@ -46,6 +47,10 @@ export async function GET(req: Request) {
   }
 
   const [sessions, buckets] = await Promise.all([purgeExpiredSessions(), purgeExpiredRateLimits()]);
-  logger.info("cron.expire_orders.done", { candidates: ids.length, expired, reconciled, sessions, buckets });
-  return NextResponse.json({ candidates: ids.length, expired, reconciled });
+  const tracking = await syncOpenShipments(50).catch((error) => {
+    logger.error("cron.tracking_sync_failed", { error });
+    return { checked: 0, updated: 0 };
+  });
+  logger.info("cron.expire_orders.done", { candidates: ids.length, expired, reconciled, sessions, buckets, tracking });
+  return NextResponse.json({ candidates: ids.length, expired, reconciled, tracking });
 }

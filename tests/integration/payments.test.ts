@@ -18,7 +18,7 @@ afterAll(() => setPaymentGatewayForTests(undefined));
 async function pendingOrder(stock = 5, quantity = 1) {
   const [user, product, zone] = await Promise.all([createUser(), createProduct({ stock, priceCents: 500_00 }), createShippingZone(20_00)]);
   const variant = product.variants[0]!;
-  const order = await createOrder({ userId: user.id, items: [{ variantId: variant.id, quantity }], address: validAddress, shippingZoneId: zone.id, customerDocument: VALID_CPF, customerPhone: "11999999999" });
+  const order = await createOrder({ userId: user.id, items: [{ variantId: variant.id, quantity }], address: validAddress, shippingOptionId: `zone_${zone.id}`, customerDocument: VALID_CPF, customerPhone: "11999999999" });
   return { user, variant, order };
 }
 

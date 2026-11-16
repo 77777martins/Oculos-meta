@@ -375,6 +375,12 @@ model Order {
   shippingService      String?     @db.VarChar(60)
   shippingMinDays      Int?
   shippingMaxDays      Int?
+  /// "TABLE" (tabela por CEP) ou "MELHOR_ENVIO".
+  shippingProvider     String?     @db.VarChar(20)
+  /// ID do serviço no Melhor Envio (ex.: 1 = PAC).
+  shippingServiceId    Int?
+  /// Cotação salva no checkout (recomendação do Melhor Envio para a compra da etiqueta).
+  shippingQuote        Json?
 
   /// Até quando o estoque fica reservado aguardando pagamento.
   reservationExpiresAt DateTime?
@@ -566,6 +572,11 @@ model Shipment {
   trackingCode String?        @db.VarChar(60)
   trackingUrl  String?        @db.VarChar(1024)
   status       ShipmentStatus @default(PENDING)
+  /// ID da etiqueta no Melhor Envio (localizada pelo código de rastreio).
+  providerOrderId String?     @db.VarChar(64)
+  /// Último status bruto recebido do provedor logístico.
+  providerStatus  String?     @db.VarChar(30)
+  lastSyncedAt    DateTime?
   shippedAt    DateTime?
   deliveredAt  DateTime?
   createdAt    DateTime       @default(now())
@@ -575,6 +586,7 @@ model Shipment {
   events ShipmentEvent[]
 
   @@index([trackingCode])
+  @@index([status, lastSyncedAt], map: "Shipment_sync_idx")
 }
 
 /// Movimentação registrada pela equipe com base na transportadora (nunca simulada).
@@ -650,6 +662,14 @@ model StoreSettings {
   boletoEnabled          Boolean  @default(false)
   /// Dias corridos até o vencimento do boleto.
   boletoDueDays          Int      @default(2)
+  /// Cotação de frete em tempo real via Melhor Envio (requer conexão OAuth no painel).
+  melhorEnvioEnabled     Boolean  @default(false)
+  /// CEP de origem dos envios (8 dígitos).
+  shippingOriginZip      String?  @db.Char(8)
+  /// Dimensões da embalagem por unidade, em centímetros.
+  packageHeightCm        Int      @default(8)
+  packageWidthCm         Int      @default(16)
+  packageLengthCm        Int      @default(20)
   updatedAt              DateTime @updatedAt
 }
 
@@ -732,6 +752,24 @@ model DataRequest {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// Integrações externas
+// -----------------------------------------------------------------------------
+
+/// Credenciais OAuth de integrações (tokens CRIPTOGRAFADOS com AES-256-GCM).
+model IntegrationCredential {
+  id                String    @id @default(cuid())
+  provider          String    @unique @db.VarChar(40)
+  environment       String    @db.VarChar(20)
+  accessTokenEnc    String    @db.Text
+  refreshTokenEnc   String    @db.Text
+  expiresAt         DateTime
+  scope             String?   @db.VarChar(500)
+  connectedById     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 // -----------------------------------------------------------------------------

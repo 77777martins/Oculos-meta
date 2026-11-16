@@ -95,7 +95,7 @@ describe("IDOR", () => {
     const zone = await createShippingZone();
     await loginAs("CUSTOMER");
     const res = await checkoutPOST(
-      json("/api/checkout", { items: [{ variantId: product.variants[0]!.id, quantity: 1 }], addressId: address.id, shippingZoneId: zone.id, customerDocument: VALID_CPF, customerPhone: "11999999999" }),
+      json("/api/checkout", { items: [{ variantId: product.variants[0]!.id, quantity: 1 }], addressId: address.id, shippingOptionId: `zone_${zone.id}`, customerDocument: VALID_CPF, customerPhone: "11999999999" }),
       params({}),
     );
     expect(res.status).toBe(404);
@@ -119,7 +119,7 @@ describe("webhook do Mercado Pago", () => {
     const user = await createUser();
     const product = await createProduct({ stock: 3 });
     const zone = await createShippingZone();
-    const order = await createOrder({ userId: user.id, items: [{ variantId: product.variants[0]!.id, quantity: 1 }], address: validAddress, shippingZoneId: zone.id, customerDocument: VALID_CPF, customerPhone: "11999999999" });
+    const order = await createOrder({ userId: user.id, items: [{ variantId: product.variants[0]!.id, quantity: 1 }], address: validAddress, shippingOptionId: `zone_${zone.id}`, customerDocument: VALID_CPF, customerPhone: "11999999999" });
     const pix = await createPixPayment(order.id, user.id);
     return { order, pix };
   }
@@ -157,7 +157,7 @@ describe("cron", () => {
     const user = await createUser();
     const product = await createProduct({ stock: 2 });
     const zone = await createShippingZone();
-    const order = await createOrder({ userId: user.id, items: [{ variantId: product.variants[0]!.id, quantity: 2 }], address: validAddress, shippingZoneId: zone.id, customerDocument: VALID_CPF, customerPhone: "11999999999" });
+    const order = await createOrder({ userId: user.id, items: [{ variantId: product.variants[0]!.id, quantity: 2 }], address: validAddress, shippingOptionId: `zone_${zone.id}`, customerDocument: VALID_CPF, customerPhone: "11999999999" });
     await db.order.update({ where: { id: order.id }, data: { reservationExpiresAt: new Date(Date.now() - 1000) } });
     const res = await cronGET(new Request(`${ORIGIN}/api/cron/expire-orders`, { headers: { authorization: "Bearer test-cron-secret" } }));
     expect(await res.json()).toMatchObject({ expired: 1 });

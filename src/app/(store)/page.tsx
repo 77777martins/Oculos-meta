@@ -82,7 +82,7 @@ export default async function HomePage() {
             { icon: Camera, title: "Registre sem pegar o celular", text: "Fotos e vídeos do seu ponto de vista, direto dos óculos." },
             { icon: Headphones, title: "Áudio aberto", text: "Música, chamadas e podcasts sem tampar os ouvidos." },
             { icon: Mic, title: "Comandos de voz", text: "Peça ajuda ao assistente sem tirar as mãos do que importa." },
-            { icon: ShieldCheck, title: "Compra com procedência", text: "Produtos novos, nota fiscal e garantia conforme o fabricante." },
+            { icon: ShieldCheck, title: "Compra transparente", text: "Preço, prazo e status do pedido sempre visíveis na sua conta." },
           ].map(({ icon: Icon, title, text }) => (
             <div key={title} className="group rounded-3xl border border-slate-100 bg-surface p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-lift">
               <span className="flex size-11 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-soft transition-colors group-hover:bg-brand-600 group-hover:text-white">
@@ -172,7 +172,7 @@ export default async function HomePage() {
             {[
               [ShieldCheck, "Pagamento protegido", "Confirmação validada diretamente com o Mercado Pago."],
               [Truck, "Entrega rastreável", "Código de rastreio e histórico na sua conta."],
-              [Sparkles, "Produto original", "Itens novos, lacrados e com nota fiscal."],
+              [Sparkles, "Descrição fiel", "Estado e especificações informados em cada produto."],
               [Headphones, "Atendimento humano", "Suporte antes e depois da compra."],
             ].map(([Icon, title, text]) => {
               const I = Icon as typeof ShieldCheck;

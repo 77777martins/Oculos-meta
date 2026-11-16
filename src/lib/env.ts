@@ -28,6 +28,11 @@ const schema = z.object({
   RESEND_API_KEY: optional,
   EMAIL_FROM: z.string().default("Óculos Meta Store <nao-responda@localhost>"),
   BLOB_READ_WRITE_TOKEN: optional,
+  MELHORENVIO_CLIENT_ID: optional,
+  MELHORENVIO_CLIENT_SECRET: optional,
+  MELHORENVIO_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
+  /** Obrigatório pelo Melhor Envio: "Nome da aplicação (email de contato técnico)". */
+  MELHORENVIO_USER_AGENT: optional,
 });
 
 export type ServerEnv = z.infer<typeof schema>;

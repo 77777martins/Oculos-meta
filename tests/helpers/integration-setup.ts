@@ -12,6 +12,10 @@ Object.assign(process.env, {
   MERCADOPAGO_ACCESS_TOKEN: "TEST-fake-token-for-tests",
   RESEND_API_KEY: "",
   BLOB_READ_WRITE_TOKEN: "",
+  MELHORENVIO_CLIENT_ID: "4242",
+  MELHORENVIO_CLIENT_SECRET: "test-me-secret",
+  MELHORENVIO_ENV: "sandbox",
+  MELHORENVIO_USER_AGENT: "Oculos Meta Store Testes (dev@example.com)",
 });
 
 /** Estado de requisição simulado (cookies e cabeçalhos) usado pelo mock de next/headers. */
@@ -28,7 +32,7 @@ vi.mock("next/headers", () => {
       get: (name: string) => (state().cookies.has(name) ? { name, value: state().cookies.get(name)! } : undefined),
       has: (name: string) => state().cookies.has(name),
       set: (name: string, value: string) => void state().cookies.set(name, value),
-      delete: (name: string) => void state().cookies.delete(name),
+      delete: (arg: string | { name: string }) => void state().cookies.delete(typeof arg === "string" ? arg : arg.name),
     }),
     headers: async () => state().headers,
   };

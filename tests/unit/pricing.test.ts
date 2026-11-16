@@ -72,10 +72,10 @@ describe("shippingOptionsForZip", () => {
     { id: "off", name: "BR", carrier: "X", serviceName: "Y", zipStart: 0, zipEnd: 99999999, priceCents: 1, freeAboveCents: null, minDays: 1, maxDays: 1, isActive: false },
   ];
   it("filtra por faixa e ignora zonas inativas, ordenando por preço", () => {
-    expect(shippingOptionsForZip(zones, "01310100", 100_00).map((o) => o.id)).toEqual(["pac", "sedex"]);
+    expect(shippingOptionsForZip(zones, "01310100", 100_00).map((o) => o.id)).toEqual(["zone_pac", "zone_sedex"]);
   });
   it("aplica frete grátis acima do valor configurado", () => {
-    expect(shippingOptionsForZip(zones, "01310100", 500_00)[0]).toMatchObject({ id: "pac", priceCents: 0, isFree: true });
+    expect(shippingOptionsForZip(zones, "01310100", 500_00)[0]).toMatchObject({ id: "zone_pac", provider: "TABLE", zoneId: "pac", priceCents: 0, isFree: true });
   });
   it("CEP inválido não retorna opções", () => {
     expect(shippingOptionsForZip(zones, "123", 100_00)).toEqual([]);

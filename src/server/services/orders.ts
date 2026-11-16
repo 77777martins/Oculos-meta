@@ -9,8 +9,9 @@ import { quoteCartLines } from "./cart";
 import { checkCoupon } from "./coupons";
 import { commitReservedSale, releaseReservation, reserveStock, returnToStock, tryDirectSale, type StockLine } from "./inventory";
 import { canTransition, canTransitionManually } from "./order-state";
-import { computeTotals, shippingOptionsForZip } from "./pricing";
+import { computeTotals } from "./pricing";
 import { getStoreSettings } from "./settings";
+import { resolveShippingOption } from "./shipping";
 
 /** Limite de pedidos aguardando pagamento por cliente (evita travar estoque por abuso). */
 export const MAX_PENDING_ORDERS_PER_USER = 3;
@@ -19,7 +20,7 @@ export interface CreateOrderInput {
   userId: string;
   items: Array<{ variantId: string; quantity: number }>;
   address: AddressData;
-  shippingZoneId: string;
+  shippingOptionId: string;
   couponCode?: string;
   customerDocument: string;
   customerPhone: string;
@@ -49,6 +50,17 @@ export async function createOrder(input: CreateOrderInput) {
   const settings = await getStoreSettings();
   const reservationExpiresAt = new Date(Date.now() + settings.pixExpirationMinutes * 60_000);
 
+  // Frete resolvido ANTES da transação (pode envolver API externa). O preço é recalculado
+  // no servidor a partir do carrinho; dentro da transação conferimos que o carrinho não mudou.
+  const preLines = await quoteCartLines(input.items);
+  const preSubtotal = preLines.reduce((a, l) => a + l.lineTotalCents, 0);
+  const option = await resolveShippingOption(input.shippingOptionId, {
+    zipCode: input.address.zipCode,
+    subtotalCents: preSubtotal,
+    lines: preLines.map((l) => ({ variantId: l.variantId, quantity: l.quantity, unitPriceCents: l.unitPriceCents, weightGrams: l.weightGrams })),
+  });
+  if (!option) throw new ValidationError("Opção de frete indisponível para o CEP informado. Recalcule o frete.");
+
   const order = await db.$transaction(
     async (tx) => {
       const pending = await tx.order.count({ where: { userId: input.userId, status: "PENDING_PAYMENT" } });
@@ -69,11 +81,7 @@ export async function createOrder(input: CreateOrderInput) {
       }
 
       const subtotalCents = lines.reduce((a, l) => a + l.lineTotalCents, 0);
-
-      // Frete: a opção escolhida precisa ser válida para o CEP informado.
-      const zone = await tx.shippingZone.findUnique({ where: { id: input.shippingZoneId } });
-      const option = zone ? shippingOptionsForZip([zone], input.address.zipCode, subtotalCents)[0] : undefined;
-      if (!zone || !option) throw new ValidationError("Opção de frete indisponível para o CEP informado.");
+      if (subtotalCents !== preSubtotal) throw new ConflictError("Os valores do carrinho foram atualizados. Revise e tente novamente.", "CART_CHANGED");
 
       let coupon: Awaited<ReturnType<typeof checkCoupon>>["coupon"] = null;
       if (input.couponCode) {
@@ -113,11 +121,14 @@ export async function createOrder(input: CreateOrderInput) {
           customerDocument: input.customerDocument,
           customerPhone: input.customerPhone,
           shippingAddress: shippingAddress as unknown as Prisma.InputJsonValue,
-          shippingZoneId: zone.id,
-          shippingCarrier: zone.carrier,
-          shippingService: zone.serviceName,
-          shippingMinDays: zone.minDays,
-          shippingMaxDays: zone.maxDays,
+          shippingZoneId: option.zoneId,
+          shippingProvider: option.provider,
+          shippingServiceId: option.serviceId,
+          shippingQuote: option as unknown as Prisma.InputJsonValue,
+          shippingCarrier: option.carrier,
+          shippingService: option.serviceName,
+          shippingMinDays: option.minDays,
+          shippingMaxDays: option.maxDays,
           reservationExpiresAt,
           items: {
             create: lines.map((l) => ({
@@ -232,7 +243,8 @@ export async function findExpiredPendingOrderIds(limit = 100): Promise<string[]>
 
 // ---- Ações administrativas --------------------------------------------------
 
-export async function adminUpdateOrderStatus(input: { orderId: string; to: OrderStatus; note: string | null; actorId: string; ip: string }) {
+/** Atualização manual (equipe) ou automática (actorId null = sistema, ex.: rastreio sincronizado). */
+export async function adminUpdateOrderStatus(input: { orderId: string; to: OrderStatus; note: string | null; actorId: string | null; ip: string | null }) {
   return db.$transaction(async (tx) => {
     const order = await lockOrder(tx, input.orderId);
     if (!order) throw new NotFoundError("Pedido não encontrado.");

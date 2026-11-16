@@ -66,7 +66,17 @@ export const settingsSchema = z.strictObject({
   maxInstallments: z.number().int().min(1).max(24),
   boletoEnabled: z.boolean(),
   boletoDueDays: z.number().int().min(1).max(5),
-});
+  melhorEnvioEnabled: z.boolean(),
+  shippingOriginZip: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.replace(/\D/g, "") : null))
+    .refine((v) => v === null || v.length === 8, "CEP de origem inválido."),
+  packageHeightCm: z.number().int().min(1).max(200),
+  packageWidthCm: z.number().int().min(1).max(200),
+  packageLengthCm: z.number().int().min(1).max(200),
+}).refine((s) => !s.melhorEnvioEnabled || Boolean(s.shippingOriginZip), { message: "Informe o CEP de origem para usar o Melhor Envio.", path: ["shippingOriginZip"] });
 
 export const orderStatusUpdateSchema = z.strictObject({
   status: z.enum(["PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"]),

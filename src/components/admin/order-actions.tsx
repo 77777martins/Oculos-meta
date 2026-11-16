@@ -170,3 +170,12 @@ export function PaymentActions({ paymentId, remainingCents, canRefund, canSync }
     </div>
   );
 }
+
+export function SyncTrackingButton({ orderId }: { orderId: string }) {
+  const { busy, run } = useAction();
+  return (
+    <Button size="sm" variant="outline" loading={busy} onClick={() => run(() => apiFetch(`/api/admin/orders/${orderId}/shipment/sync`, { method: "POST" }), "Rastreio sincronizado com o Melhor Envio")}>
+      Sincronizar com Melhor Envio
+    </Button>
+  );
+}

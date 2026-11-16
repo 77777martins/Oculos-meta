@@ -8,7 +8,7 @@ Este texto é um modelo inicial. Substitua-o pela política revisada por sua ass
 
 ## Quais dados coletamos
 - Cadastro: nome, e-mail, senha (armazenada apenas como hash criptográfico) e telefone opcional.
-- Compras: CPF (exigido para nota fiscal e pelo processador de pagamentos), endereço de entrega e itens comprados.
+- Compras: CPF (exigido pelo processador de pagamentos e pelas transportadoras), endereço de entrega e itens comprados.
 - Segurança: registros técnicos mínimos, com endereço IP armazenado apenas de forma pseudonimizada.
 
 ## Para que usamos
@@ -54,7 +54,7 @@ Compras realizadas pela internet podem ser canceladas em até 7 dias corridos ap
 Entre em contato pela página de Contato informando o número do pedido. Orientaremos sobre o envio do produto.
 
 ## Produtos com defeito
-Produtos com defeito seguem as regras de garantia legal e as condições de garantia do fabricante.
+Produtos com defeito contam com a garantia legal prevista no Código de Defesa do Consumidor (art. 26).
 
 ## Reembolso
 Após o recebimento e a conferência do produto, o reembolso é feito pelo mesmo meio de pagamento utilizado na compra.`;

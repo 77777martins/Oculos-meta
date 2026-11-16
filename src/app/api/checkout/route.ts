@@ -38,7 +38,7 @@ export const POST = apiHandler(async (req) => {
     userId: user.id,
     items: input.items,
     address,
-    shippingZoneId: input.shippingZoneId,
+    shippingOptionId: input.shippingOptionId,
     couponCode: input.couponCode,
     customerDocument: input.customerDocument,
     customerPhone: input.customerPhone,

@@ -90,7 +90,7 @@ export async function tryDirectSale(tx: Tx, lines: StockLine[], orderId: string)
   return true;
 }
 
-export async function returnToStock(tx: Tx, lines: StockLine[], orderId: string, reason: string, actorId?: string): Promise<void> {
+export async function returnToStock(tx: Tx, lines: StockLine[], orderId: string, reason: string, actorId?: string | null): Promise<void> {
   for (const line of sorted(lines)) {
     await tx.$executeRaw`UPDATE "ProductVariant" SET "stock" = "stock" + ${line.quantity}, "updatedAt" = now() WHERE "id" = ${line.variantId}`;
   }

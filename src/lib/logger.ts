@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 /**
  * Logger estruturado (JSON em uma linha — ideal para Vercel/Datadog/etc.).
  * Redige automaticamente chaves sensíveis em qualquer nível de aninhamento.
@@ -28,9 +30,27 @@ function write(level: Level, msg: string, meta?: Record<string, unknown>) {
   if (level === "debug" && process.env.NODE_ENV === "production") return;
   if (process.env.NODE_ENV === "test" && level !== "error" && !process.env.DEBUG_LOGS) return;
   const line = JSON.stringify({ level, msg, time: new Date().toISOString(), ...(meta ? (redact(meta) as object) : {}) });
-  if (level === "error") console.error(line);
+  if (level === "error") {
+    console.error(line);
+    reportToSentry(msg, meta);
+  }
   else if (level === "warn") console.warn(line);
   else console.log(line);
+}
+
+/**
+ * Erros também vão ao Sentry (no-op sem DSN). Erros tratados pelas rotas de API
+ * não chegam ao Sentry sozinhos — por isso o envio parte daqui, já com redação.
+ */
+function reportToSentry(msg: string, meta?: Record<string, unknown>) {
+  try {
+    const extra = meta ? (redact(meta) as Record<string, unknown>) : undefined;
+    const err = meta?.error;
+    if (err instanceof Error) Sentry.captureException(err, { tags: { event: msg }, extra });
+    else Sentry.captureMessage(msg, { level: "error", extra });
+  } catch {
+    /* monitoramento nunca derruba a aplicação */
+  }
 }
 
 export const logger = {

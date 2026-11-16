@@ -16,6 +16,7 @@ export interface QuotedLine {
   requestedQuantity: number;
   quantity: number;
   available: number;
+  weightGrams: number;
   lineTotalCents: number;
   issue: "UNAVAILABLE" | "INSUFFICIENT_STOCK" | null;
 }
@@ -68,6 +69,7 @@ export async function quoteCartLines(items: Array<{ variantId: string; quantity:
         requestedQuantity: item.quantity,
         quantity,
         available,
+        weightGrams: v.weightGrams,
         lineTotalCents: unitPriceCents * quantity,
         issue: !sellable || available === 0 ? "UNAVAILABLE" : quantity < item.quantity ? "INSUFFICIENT_STOCK" : null,
       },
