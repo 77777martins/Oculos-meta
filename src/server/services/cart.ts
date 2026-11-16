@@ -18,6 +18,8 @@ export interface QuotedLine {
   available: number;
   weightGrams: number;
   lineTotalCents: number;
+  /** Produto publicado e variante ativa (independe do estoque). */
+  sellable: boolean;
   issue: "UNAVAILABLE" | "INSUFFICIENT_STOCK" | null;
 }
 
@@ -71,6 +73,7 @@ export async function quoteCartLines(items: Array<{ variantId: string; quantity:
         available,
         weightGrams: v.weightGrams,
         lineTotalCents: unitPriceCents * quantity,
+        sellable,
         issue: !sellable || available === 0 ? "UNAVAILABLE" : quantity < item.quantity ? "INSUFFICIENT_STOCK" : null,
       },
     ];

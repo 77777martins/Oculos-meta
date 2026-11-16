@@ -72,12 +72,15 @@ export async function createOrder(input: CreateOrderInput) {
 
       const lines = await quoteCartLines(input.items, tx);
       if (lines.length === 0) throw new ValidationError("Seu carrinho está vazio.");
-      const problem = lines.find((l) => l.issue !== null);
-      if (problem || lines.length !== new Set(input.items.map((i) => i.variantId)).size) {
-        throw new ConflictError(
-          problem ? `"${problem.productName} — ${problem.variantName}" não possui estoque suficiente.` : "Alguns produtos não estão mais disponíveis.",
-          "CART_CHANGED",
-        );
+      // Produto removido/despublicado → o carrinho mudou.
+      if (lines.length !== new Set(input.items.map((i) => i.variantId)).size || lines.some((l) => !l.sellable)) {
+        throw new ConflictError("Alguns produtos não estão mais disponíveis. Revise o carrinho.", "CART_CHANGED");
+      }
+      // Falta de estoque tem SEMPRE o mesmo código, seja detectada aqui (outra compra reservou antes)
+      // ou na reserva atômica logo abaixo — o cliente recebe uma resposta consistente.
+      const short = lines.find((l) => l.issue !== null);
+      if (short) {
+        throw new ConflictError(`Estoque insuficiente para "${short.productName} — ${short.variantName}". Atualize o carrinho.`, "OUT_OF_STOCK", { variantId: short.variantId });
       }
 
       const subtotalCents = lines.reduce((a, l) => a + l.lineTotalCents, 0);
