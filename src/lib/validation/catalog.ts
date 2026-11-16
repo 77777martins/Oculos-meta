@@ -27,6 +27,14 @@ export const variantSchema = z
 export const productImageSchema = z.strictObject({
   url: safeUrlSchema,
   alt: cleanText(200),
+  /** Imagem específica de uma variante (por SKU). Vazio = imagem geral do produto. */
+  variantSku: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .optional()
+    .nullable()
+    .transform((v) => v || null),
 });
 
 export const productSchema = z.strictObject({
@@ -48,6 +56,9 @@ export const productSchema = z.strictObject({
     .max(50)
     .refine((vs) => new Set(vs.map((v) => v.sku)).size === vs.length, "SKUs repetidos."),
   images: z.array(productImageSchema).max(20),
+}).refine((p) => p.images.every((img) => !img.variantSku || p.variants.some((v) => v.sku === img.variantSku)), {
+  message: "Uma imagem está vinculada a um SKU que não existe neste produto.",
+  path: ["images"],
 });
 
 export const stockAdjustmentSchema = z.strictObject({

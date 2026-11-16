@@ -9,6 +9,7 @@ import { expireOrder, findExpiredPendingOrderIds } from "@/server/services/order
 import { syncProviderPayment } from "@/server/payments/service";
 import { getPaymentGateway } from "@/server/payments/mercadopago";
 import { syncOpenShipments } from "@/server/shipping/tracking-sync";
+import { applyRetentionPolicy } from "@/server/services/retention";
 
 /**
  * Tarefa agendada (Vercel Cron): expira pedidos não pagos, liberando estoque.
@@ -51,6 +52,10 @@ export async function GET(req: Request) {
     logger.error("cron.tracking_sync_failed", { error });
     return { checked: 0, updated: 0 };
   });
-  logger.info("cron.expire_orders.done", { candidates: ids.length, expired, reconciled, sessions, buckets, tracking });
+  const retention = await applyRetentionPolicy().catch((error) => {
+    logger.error("cron.retention_failed", { error });
+    return null;
+  });
+  logger.info("cron.expire_orders.done", { candidates: ids.length, expired, reconciled, sessions, buckets, tracking, retention });
   return NextResponse.json({ candidates: ids.length, expired, reconciled, tracking });
 }

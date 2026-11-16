@@ -5,6 +5,7 @@ import { requireUserPage } from "@/lib/auth/guards";
 import { formatBRL } from "@/lib/money";
 import { cn, formatDateTime, formatZip, maskCpf } from "@/lib/utils";
 import { idSchema } from "@/lib/validation/common";
+import { trackingLink } from "@/lib/tracking";
 import { ButtonLink } from "@/components/ui/button";
 import { ProductImage } from "@/components/ui/product-image";
 import { OrderStatusBadge, PaymentStatusBadge, ShipmentStatusBadge } from "@/components/ui/status-badge";
@@ -15,13 +16,6 @@ export const metadata = { title: "Detalhes do pedido" };
 
 const METHOD_LABEL = { PIX: "PIX", CREDIT_CARD: "Cartão de crédito", DEBIT_CARD: "Cartão de débito", BOLETO: "Boleto", OTHER: "Outro" } as const;
 const FLOW = ["PENDING_PAYMENT", "PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
-
-/** Link oficial de rastreio dos Correios quando o código segue o padrão (AA123456789BR). */
-function trackingLink(code: string | null, explicit: string | null): string | null {
-  if (explicit) return explicit;
-  if (code && /^[A-Z]{2}\d{9}[A-Z]{2}$/.test(code)) return `https://rastreamento.correios.com.br/app/index.php?objeto=${code}`;
-  return null;
-}
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

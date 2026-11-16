@@ -29,6 +29,7 @@
 - **Consentimentos registrados** (termos, privacidade, marketing, cookies) com versão, data e IP pseudonimizado.
 - **Direitos do titular** em *Minha conta → Privacidade*: exportação JSON (acesso/portabilidade) e exclusão (anonimização com retenção fiscal dos pedidos).
 - **IPs** armazenados apenas como HMAC.
+- **Retenção automática** (`src/server/services/retention.ts`, executada pelo cron): tokens de senha usados/expirados → 7 dias; mensagens de contato → 24 meses; auditoria → 5 anos; pedidos **nunca pagos** → dados pessoais anonimizados após 180 dias. Pedidos pagos e pagamentos são mantidos (obrigação fiscal).
 - **Cookies:** apenas essenciais por padrão; banner de consentimento.
 - **Políticas:** modelos iniciais identificados como tal — **revise com assessoria jurídica** antes de operar.
 

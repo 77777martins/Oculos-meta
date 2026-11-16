@@ -24,7 +24,11 @@ Compartilhamos dados apenas com quem é necessário para concluir sua compra: pr
 Você pode, a qualquer momento, acessar e baixar seus dados, corrigi-los e solicitar a exclusão da conta pela área "Minha conta > Privacidade e dados".
 
 ## Retenção
-Dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal. Ao excluir a conta, dados pessoais não obrigatórios são removidos ou anonimizados.
+- Pedidos pagos: mantidos pelo prazo exigido pela legislação fiscal.
+- Pedidos nunca pagos (expirados ou cancelados): nome, CPF, contato e endereço são anonimizados após 180 dias.
+- Mensagens enviadas pelo formulário de contato: excluídas após 24 meses.
+- Registros de segurança (auditoria): mantidos por 5 anos.
+- Ao excluir a conta, dados pessoais não obrigatórios são removidos ou anonimizados imediatamente.
 
 ## Cookies
 Utilizamos cookies estritamente necessários (sessão e segurança). Cookies de análise só são utilizados com seu consentimento.`;

@@ -12,6 +12,7 @@ import { canTransition, canTransitionManually } from "./order-state";
 import { computeTotals } from "./pricing";
 import { getStoreSettings } from "./settings";
 import { resolveShippingOption } from "./shipping";
+import { notifyOrder } from "./notifications";
 
 /** Limite de pedidos aguardando pagamento por cliente (evita travar estoque por abuso). */
 export const MAX_PENDING_ORDERS_PER_USER = 3;
@@ -169,6 +170,7 @@ export async function createOrder(input: CreateOrderInput) {
   );
 
   logger.info("order.created", { orderId: order.id, number: order.number });
+  await notifyOrder(order.id, "CREATED");
   return order;
 }
 
@@ -223,7 +225,7 @@ async function closeUnpaidOrder(tx: Tx, orderId: string, to: "EXPIRED" | "CANCEL
 }
 
 export async function expireOrder(orderId: string): Promise<boolean> {
-  return db.$transaction(async (tx) => {
+  const expired = await db.$transaction(async (tx) => {
     const order = await tx.order.findUnique({ where: { id: orderId }, select: { reservationExpiresAt: true, status: true } });
     if (!order || order.status !== "PENDING_PAYMENT" || !order.reservationExpiresAt || order.reservationExpiresAt > new Date()) return false;
     // Pagamento em análise (ex.: cartão em revisão antifraude) não expira automaticamente.
@@ -231,6 +233,8 @@ export async function expireOrder(orderId: string): Promise<boolean> {
     if (inProcess > 0) return false;
     return closeUnpaidOrder(tx, orderId, "EXPIRED", "Prazo de pagamento expirado");
   });
+  if (expired) await notifyOrder(orderId, "EXPIRED");
+  return expired;
 }
 
 /** Pedidos de um cliente que já passaram do prazo (chamado pelo cron e sob demanda). */
@@ -248,7 +252,7 @@ export async function findExpiredPendingOrderIds(limit = 100): Promise<string[]>
 
 /** Atualização manual (equipe) ou automática (actorId null = sistema, ex.: rastreio sincronizado). */
 export async function adminUpdateOrderStatus(input: { orderId: string; to: OrderStatus; note: string | null; actorId: string | null; ip: string | null }) {
-  return db.$transaction(async (tx) => {
+  await db.$transaction(async (tx) => {
     const order = await lockOrder(tx, input.orderId);
     if (!order) throw new NotFoundError("Pedido não encontrado.");
     if (!canTransitionManually(order.status, input.to)) {
@@ -289,6 +293,8 @@ export async function adminUpdateOrderStatus(input: { orderId: string; to: Order
 
     await audit({ actorId: input.actorId, action: "order.status_update", entityType: "Order", entityId: order.id, metadata: { from: order.status, to: input.to }, ip: input.ip }, tx);
   });
+  // Após a transação (inclusive quando a mudança vem da sincronização de rastreio).
+  if (input.to === "SHIPPED" || input.to === "DELIVERED" || input.to === "CANCELLED") await notifyOrder(input.orderId, input.to);
 }
 
 // ---- Leitura para o cliente (sempre filtrando por userId — anti-IDOR) ---------

@@ -40,7 +40,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     categoryId: product.categoryId,
     seoTitle: product.seoTitle,
     seoDescription: product.seoDescription,
-    images: product.images.map((i) => ({ url: i.url, alt: i.alt })),
+    images: product.images.map((i) => ({ url: i.url, alt: i.alt, variantSku: product.variants.find((v) => v.id === i.variantId)?.sku ?? null })),
     variants: product.variants.map((v) => ({
       id: v.id,
       sku: v.sku,
