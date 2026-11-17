@@ -38,9 +38,27 @@ describe("conteúdo do catálogo", () => {
   it("modelos sem identificação confirmada não publicam números de geração", () => {
     const pending = entries.filter(([, c]) => c.pending);
     expect(pending.map(([slug]) => slug).sort()).toEqual(
-      ["demo-ray-ban-meta-gatinho", "demo-ray-ban-meta-piloto", "demo-ray-ban-meta-retangular", "demo-ray-ban-meta-skyler", "demo-ray-ban-meta-wayfarer"].sort(),
+      ["demo-ray-ban-meta-skyler", "demo-ray-ban-meta-wayfarer"].sort(),
     );
     for (const [, c] of pending) expect(published(c)).not.toMatch(/\d+\s*(h|horas|GB|MP)\b|3K|Gen\s?\d/i);
+  });
+
+  it.each([
+    ["demo-ray-ban-meta-retangular", "Ray-Ban Meta Blayzer Optics (Gen 2)", "RW7001", "Mais de 8 horas", "Até 48 horas adicionais"],
+    ["demo-ray-ban-meta-gatinho", "Ray-Ban Meta Zena (Gen 3)", "RW4015", "Até 9 horas", "Até 50 horas adicionais"],
+    ["demo-ray-ban-meta-piloto", "Ray-Ban Meta Aviator (Gen 3)", "RW4016", "Até 9 horas", "Até 50 horas adicionais"],
+  ])("%s: modelo confirmado com nome, referência e especificações da sua geração", (slug, name, ref, battery, extra) => {
+    const c = CATALOG_CONTENT[slug]!;
+    const spec = (label: string) => c.specs.find((x) => x.label === label)?.value;
+    expect(c.name).toBe(`[DEMO] ${name}`);
+    expect(spec("Referência")).toBe(ref);
+    expect(spec("Fotos")).toBe("3024 × 4032 pixels");
+    expect(spec("Vídeo")).toBe("Até 3K Ultra HD a 30 fps");
+    expect(spec("Conectividade")).toBe("Bluetooth 5.3 e Wi-Fi 6");
+    expect(spec("Bateria")).toBe(battery);
+    expect(spec("Estojo carregador")).toBe(extra);
+    expect(c.pending).toBeUndefined();
+    expect(c.unconfirmedSpecs).toBeUndefined();
   });
 
   it("nenhum produto se diz à prova d'água (só resistência informada pelo fabricante)", () => {

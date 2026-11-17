@@ -7,7 +7,7 @@ Para cada modelo e cor:
 
 | Campo | Observação |
 |---|---|
-| Nome do modelo | Hoje provisórios: "Piloto", "Gatinho" e "Retangular" (Ray-Ban Meta) |
+| Nome do modelo | Todos identificados (Skyler e Wayfarer: falta confirmar a geração) |
 | Preço e preço promocional | Todos os valores atuais são fictícios |
 | Estoque | Por cor |
 | Lente | Transparente, escura, polarizada, que escurece no sol (Transitions) |
@@ -21,13 +21,15 @@ nome descritivo e só características gerais; os números da identificação pr
 
 | Produto na loja | Identificação provável | O que fica pendente |
 |---|---|---|
-| Ray-Ban Meta Retangular | Blayzer Optics (Gen 2) | Nome, vídeo 3K, 12 MP, 6 microfones, 32 GB, 8 h + 48 h |
-| Ray-Ban Meta Gatinho | Zena (Gen 3) | Nome, vídeo 3K, 12 MP, 6 microfones, 32 GB, 9 h + 50 h |
-| Ray-Ban Meta Piloto | Aviator (Gen 3) | Nome, vídeo 3K, 12 MP, 6 microfones, 32 GB, 9 h + 50 h |
 | Ray-Ban Meta Skyler | Gen 1 ou Gen 2 | Vídeo, bateria e armazenamento |
 | Ray-Ban Meta Wayfarer | Geração não informada | Vídeo, bateria e armazenamento |
 
 Confirmado pelas fotos: **Ray-Ban Meta Audio Clubmaster** (haste: "RAY-BAN META · AUDIO · CLUBMASTER"), sem câmera.
+
+Confirmados pelo lojista no catálogo oficial Ray-Ban (17/11/2026):
+- **Ray-Ban Meta Blayzer Optics (Gen 2)** — RW7001 (antes "Retangular").
+- **Ray-Ban Meta Zena (Gen 3)** — RW4015 (antes "Gatinho"). Revisar: as fotos frontal e traseira mostram lente verde; as laterais, lente clara/Transitions.
+- **Ray-Ban Meta Aviator (Gen 3)** — RW4016, Havana com lentes Transparentes/Marrom Transitions (antes "Piloto").
 
 Confirmar também:
 - quais modelos têm mesmo lente que escurece (efeito ligado hoje: Wayfarer preto e azul, Clubmaster, Gatinho, Piloto e Oakley HSTN);

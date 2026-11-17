@@ -6,7 +6,10 @@
  *   Descrições e especificações vêm de prisma/catalog-content.ts (dados do lojista).
  */
 import { PrismaClient } from "@prisma/client";
-import { CATALOG_CONTENT, DEMO_PLACEHOLDER_PREFIX, LEGACY_DEMO_NAMES } from "./catalog-content";
+import { createHash } from "node:crypto";
+import { CATALOG_CONTENT, DEMO_PLACEHOLDER_PREFIX, LEGACY_DEMO_MODELS, LEGACY_DEMO_NAMES, PREVIOUS_SEEDED_DESCRIPTION_HASHES } from "./catalog-content";
+
+const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
 
 const db = new PrismaClient();
 
@@ -330,13 +333,17 @@ async function syncDemoImages() {
  */
 async function syncCatalogContent() {
   for (const [slug, c] of Object.entries(CATALOG_CONTENT)) {
-    const product = await db.product.findUnique({ where: { slug }, select: { id: true, name: true, description: true } });
-    if (!product || !product.description.startsWith(DEMO_PLACEHOLDER_PREFIX)) continue;
-    const renameFrom = LEGACY_DEMO_NAMES[slug];
+    const product = await db.product.findUnique({ where: { slug }, select: { id: true, name: true, model: true, description: true } });
+    if (!product) continue;
+    const untouched = product.description.startsWith(DEMO_PLACEHOLDER_PREFIX) || PREVIOUS_SEEDED_DESCRIPTION_HASHES.has(sha256(product.description));
+    if (!untouched) continue; // editado no painel (ou já atualizado): preserva
+    const renameFrom = LEGACY_DEMO_NAMES[slug] ?? [];
+    const remodelFrom = LEGACY_DEMO_MODELS[slug] ?? [];
     await db.product.update({
       where: { id: product.id },
       data: {
-        ...(renameFrom && product.name === renameFrom ? { name: c.name } : {}),
+        ...(renameFrom.includes(product.name) ? { name: c.name } : {}),
+        ...(c.model && remodelFrom.includes(product.model) ? { model: c.model } : {}),
         shortDescription: c.shortDescription,
         description: c.description,
         specs: c.specs,

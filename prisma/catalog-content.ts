@@ -20,6 +20,8 @@
 export interface CatalogEntry {
   /** Nome exibido. Mantém o prefixo [DEMO] enquanto a loja estiver em demonstração. */
   name: string;
+  /** Texto exibido como "Modelo ..." na página (não é identificador). */
+  model?: string;
   shortDescription: string;
   description: string;
   specs: Array<{ label: string; value: string }>;
@@ -27,6 +29,8 @@ export interface CatalogEntry {
   seoDescription: string;
   /** Identificação ainda não confirmada pelo código do modelo (aparece em docs/PENDENCIAS.md). */
   pending?: string;
+  /** Ponto que precisa de revisão do lojista, sem impedir a publicação do modelo confirmado. */
+  review?: string;
   /** Especificações da identificação PROVÁVEL — só publicar depois de confirmar o modelo. */
   unconfirmedSpecs?: Array<{ label: string; value: string }>;
 }
@@ -60,79 +64,85 @@ const META_GLASSES_FEATURES = `## Tecnologia da linha Meta Glasses
 export const CATALOG_CONTENT: Record<string, CatalogEntry> = {
   // ───────────────────────── Ray-Ban Meta ─────────────────────────
   "demo-ray-ban-meta-retangular": {
-    name: "[DEMO] Ray-Ban Meta Retangular",
-    shortDescription: "Armação retangular preta translúcida com lentes transparentes, pensada para quem usa óculos de grau no dia a dia." + DEMO_NOTE,
-    description: `Visual discreto e moderno: a armação retangular em preto translúcido deixa aparecer os detalhes internos e combina com o uso diário, no trabalho ou no lazer. As lentes transparentes fazem deste um modelo pensado para quem usa óculos o tempo todo.
+    // Modelo confirmado pelo lojista em 17/11/2026 (catálogo oficial Ray-Ban): referência RW7001.
+    name: "[DEMO] Ray-Ban Meta Blayzer Optics (Gen 2)",
+    model: "Blayzer Optics (Gen 2) · RW7001",
+    shortDescription: "Design retangular moderno em preto translúcido, desenvolvido especialmente para quem usa óculos de grau." + DEMO_NOTE,
+    description: `O Ray-Ban Meta Blayzer Optics Gen 2 combina design retangular moderno com tecnologia inteligente. Desenvolvido especialmente para usuários de óculos de grau, possui armação preta translúcida, dobradiças com abertura ampliada, plaquetas nasais intercambiáveis e hastes ajustáveis.
 
 ## Diferenciais
-- Armação preta translúcida, com acabamento que deixa os componentes internos à mostra.
-- Lentes transparentes para uso em ambientes internos e no dia a dia.
-- Tecnologia Ray-Ban Meta integrada à armação: câmera, áudio open-ear e Meta AI.
+- Pensado para óculos de grau: dobradiças com abertura ampliada, plaquetas nasais intercambiáveis e hastes ajustáveis.
+- Câmera ultra-angular de 12 MP, com fotos de 3024 × 4032 pixels e vídeos em até 3K Ultra HD a 30 fps.
+- Dois alto-falantes open-ear e sistema de 6 microfones para músicas, chamadas e comandos de voz.
+- Meta AI integrada.
+- Mais de 8 horas de bateria e até 48 horas adicionais com o estojo carregador.
 
 ## Armação e lentes
 - Formato: retangular.
 - Cor: preto translúcido.
 - Lentes: transparentes (como nas fotos).
-
-## Sobre a identificação
-O código do modelo gravado na haste ainda está sendo confirmado. As especificações numéricas (bateria, armazenamento, vídeo) serão publicadas assim que a versão exata for confirmada.`,
+- Compatível com lentes de grau.`,
     specs: [
+      s("Referência", "RW7001"),
       s("Formato da armação", "Retangular"),
       s("Cor", "Preto translúcido"),
       s("Lentes", "Transparentes"),
-      s("Recursos", "Câmera integrada, áudio open-ear, microfones e Meta AI"),
-    ],
-    seoTitle: "Ray-Ban Meta Retangular preto translúcido",
-    seoDescription: "Óculos inteligente Ray-Ban Meta retangular, preto translúcido, com lentes transparentes, câmera, áudio open-ear e Meta AI.",
-    pending: "Identificação provável: Ray-Ban Meta Blayzer Optics (Gen 2). O código na haste não está legível nas fotos.",
-    unconfirmedSpecs: [
+      s("Ajustes", "Dobradiças com abertura ampliada, plaquetas nasais intercambiáveis e hastes ajustáveis"),
       s("Câmera", "Ultra-angular de 12 MP"),
-      s("Vídeo", "3K Ultra HD"),
-      s("Microfones", "Conjunto de 6"),
+      s("Fotos", "3024 × 4032 pixels"),
+      s("Vídeo", "Até 3K Ultra HD a 30 fps"),
+      s("Áudio", "Dois alto-falantes open-ear"),
+      s("Microfones", "Sistema de 6 microfones"),
+      s("Assistente", "Meta AI"),
       s("Armazenamento", "32 GB"),
       s("Bateria", "Mais de 8 horas"),
       s("Estojo carregador", "Até 48 horas adicionais"),
-      s("Ajustes", "Hastes ajustáveis, apoios nasais intercambiáveis e dobradiças com abertura adicional"),
+      s("Conectividade", "Bluetooth 5.3 e Wi-Fi 6"),
       s("Lentes de grau", "Compatível"),
     ],
+    seoTitle: "Ray-Ban Meta Blayzer Optics Gen 2 preto translúcido",
+    seoDescription: "Ray-Ban Meta Blayzer Optics Gen 2 (RW7001): retangular para lentes de grau, câmera 12 MP, vídeo 3K, Meta AI e 8 h de bateria.",
   },
 
   "demo-ray-ban-meta-gatinho": {
-    name: "[DEMO] Ray-Ban Meta Gatinho",
-    shortDescription: "Armação cat-eye em preto brilhante, com visual moderno, elegante e marcante." + DEMO_NOTE,
-    description: `Um cat-eye de personalidade: linhas angulares, cantos levemente elevados e preto brilhante para quem quer um óculos inteligente que também seja peça de estilo.
+    // Modelo confirmado pelo lojista em 17/11/2026 (catálogo oficial Ray-Ban): referência RW4015.
+    name: "[DEMO] Ray-Ban Meta Zena (Gen 3)",
+    model: "Zena (Gen 3) · RW4015",
+    shortDescription: "Design cat-eye em preto brilhante, com linhas elegantes, câmera de 12 MP, áudio open-ear e Meta AI." + DEMO_NOTE,
+    description: `O Ray-Ban Meta Zena Gen 3 apresenta design cat-eye, com armação preta brilhante e linhas elegantes. Combina estilo sofisticado com tecnologia inteligente, oferecendo captura de fotos e vídeos, áudio integrado e interação com a Meta AI.
 
 ## Diferenciais
-- Formato cat-eye moderno e marcante.
-- Lente fotocromática: clara em ambientes internos e mais escura sob o sol, como mostram as fotos.
-- Tecnologia Ray-Ban Meta integrada: câmera, áudio open-ear e Meta AI.
+- Formato cat-eye com linhas elegantes, em preto brilhante.
+- Câmera ultra-angular de 12 MP, com fotos de 3024 × 4032 pixels e vídeos em até 3K Ultra HD a 30 fps.
+- Dois alto-falantes open-ear e sistema de 6 microfones.
+- Assistente Meta AI.
+- Até 9 horas de bateria e até 50 horas adicionais com o estojo carregador.
 
 ## Armação e lentes
 - Formato: cat-eye (gatinho).
 - Cor: preto brilhante.
-- Lentes: fotocromáticas (escurecem com a luz do sol).
-
-## Sobre a identificação
-O código do modelo gravado na haste ainda está sendo confirmado. As especificações numéricas (bateria, armazenamento, vídeo) serão publicadas assim que a versão exata for confirmada.`,
+- Lentes Transitions, conforme a versão: claras em ambientes internos e mais escuras sob o sol.
+- Compatível com lentes de grau.`,
     specs: [
+      s("Referência", "RW4015"),
       s("Formato da armação", "Cat-eye (gatinho)"),
       s("Cor", "Preto brilhante"),
-      s("Lentes", "Fotocromáticas (escurecem com a luz do sol)"),
-      s("Recursos", "Câmera integrada, áudio open-ear, microfones e Meta AI"),
-    ],
-    seoTitle: "Ray-Ban Meta cat-eye preto brilhante",
-    seoDescription: "Óculos inteligente Ray-Ban Meta cat-eye em preto brilhante, com lente fotocromática, câmera, áudio open-ear e Meta AI.",
-    pending: "Identificação provável: Ray-Ban Meta Zena (Gen 3). O código na haste não está legível nas fotos. Não confundir com o Skyler.",
-    unconfirmedSpecs: [
+      s("Lentes", "Transitions, conforme a versão"),
       s("Câmera", "Ultra-angular de 12 MP"),
-      s("Vídeo", "3K Ultra HD"),
-      s("Microfones", "Conjunto de 6"),
+      s("Fotos", "3024 × 4032 pixels"),
+      s("Vídeo", "Até 3K Ultra HD a 30 fps"),
+      s("Áudio", "Dois alto-falantes open-ear"),
+      s("Microfones", "Sistema de 6 microfones"),
+      s("Assistente", "Meta AI"),
       s("Armazenamento", "32 GB"),
       s("Bateria", "Até 9 horas"),
       s("Estojo carregador", "Até 50 horas adicionais"),
-      s("Comunicação", "Chamadas e mensagens sem usar as mãos"),
+      s("Conectividade", "Bluetooth 5.3 e Wi-Fi 6"),
       s("Lentes de grau", "Compatível"),
     ],
+    seoTitle: "Ray-Ban Meta Zena Gen 3 preto brilhante",
+    seoDescription: "Ray-Ban Meta Zena Gen 3 (RW4015): cat-eye preto brilhante, câmera 12 MP, vídeo 3K, Meta AI e até 9 h de bateria.",
+    review: "As fotos frontal e traseira do Zena mostram lente verde, diferente da lente clara/Transitions das fotos laterais. Confirmar se é a mesma variante.",
   },
 
   "demo-ray-ban-meta-clubmaster": {
@@ -174,43 +184,44 @@ Importante: o Ray-Ban Meta Audio Clubmaster é um modelo somente de áudio. Ele 
   },
 
   "demo-ray-ban-meta-piloto": {
-    name: "[DEMO] Ray-Ban Meta Piloto",
-    shortDescription: "Inspirado nos clássicos aviadores: formato piloto, lentes amplas e armação tartaruga." + DEMO_NOTE,
-    description: `Um design que lembra os tradicionais óculos aviadores, com ponte reta, lentes amplas e armação em tartaruga, para um visual clássico com tecnologia inteligente.
+    // Modelo confirmado pelo lojista em 17/11/2026 (catálogo oficial Ray-Ban): referência RW4016,
+    // variante Havana com lentes Transparentes/Marrom Transitions.
+    name: "[DEMO] Ray-Ban Meta Aviator (Gen 3)",
+    model: "Aviator (Gen 3) · RW4016",
+    shortDescription: "O tradicional design aviador em acabamento Havana, com lentes Transitions que escurecem ao sol." + DEMO_NOTE,
+    description: `O Ray-Ban Meta Aviator Gen 3 combina o tradicional design aviador com tecnologia inteligente. Possui armação injetada com acabamento Havana, formato piloto e lentes fotocromáticas que escurecem com a exposição à luz solar e clareiam em ambientes internos.
 
 ## Diferenciais
-- Formato piloto com lentes amplas.
-- Armação em tartaruga, com tons de marrom.
-- Lente fotocromática: clara em ambientes internos e marrom sob o sol, como mostram as fotos.
-- Tecnologia Ray-Ban Meta integrada: câmera, áudio open-ear e Meta AI.
+- Formato piloto clássico, com lentes amplas.
+- Lentes Transitions: transparentes em ambientes internos e marrons sob o sol.
+- Câmera ultra-angular de 12 MP, com fotos de 3024 × 4032 pixels e vídeos em até 3K Ultra HD a 30 fps.
+- Dois alto-falantes open-ear e sistema de 6 microfones.
+- Até 9 horas de bateria e até 50 horas adicionais com o estojo carregador.
 
 ## Armação e lentes
 - Formato: piloto (aviador).
-- Cor: tartaruga.
-- Lentes: fotocromáticas, em tom marrom quando escurecem.
-
-## Sobre a identificação
-O código do modelo gravado na haste ainda está sendo confirmado. As especificações numéricas (bateria, armazenamento, vídeo) serão publicadas assim que a versão exata for confirmada.`,
+- Armação: injetada, acabamento Havana.
+- Lentes da variante das fotos: Transparentes/Marrom Transitions.
+- Compatível com lentes de grau.`,
     specs: [
+      s("Referência", "RW4016"),
       s("Formato da armação", "Piloto (aviador)"),
-      s("Cor", "Tartaruga"),
-      s("Lentes", "Fotocromáticas, tom marrom"),
-      s("Recursos", "Câmera integrada, áudio open-ear, microfones e Meta AI"),
-    ],
-    seoTitle: "Ray-Ban Meta piloto tartaruga",
-    seoDescription: "Óculos inteligente Ray-Ban Meta em formato piloto, armação tartaruga e lente fotocromática marrom, com câmera e Meta AI.",
-    pending: "Identificação provável: Ray-Ban Meta Aviator (Gen 3). O código na haste não está legível nas fotos.",
-    unconfirmedSpecs: [
+      s("Armação", "Injetada, acabamento Havana"),
+      s("Lentes", "Transparentes/Marrom Transitions (variante das fotos)"),
       s("Câmera", "Ultra-angular de 12 MP"),
-      s("Vídeo", "3K Ultra HD"),
-      s("Microfones", "Conjunto de 6"),
+      s("Fotos", "3024 × 4032 pixels"),
+      s("Vídeo", "Até 3K Ultra HD a 30 fps"),
+      s("Áudio", "Dois alto-falantes open-ear"),
+      s("Microfones", "Sistema de 6 microfones"),
+      s("Assistente", "Meta AI"),
       s("Armazenamento", "32 GB"),
       s("Bateria", "Até 9 horas"),
       s("Estojo carregador", "Até 50 horas adicionais"),
-      s("Comunicação", "Chamadas e mensagens por comando de voz"),
-      s("Tradução", "Em tempo real"),
+      s("Conectividade", "Bluetooth 5.3 e Wi-Fi 6"),
       s("Lentes de grau", "Compatível"),
     ],
+    seoTitle: "Ray-Ban Meta Aviator Gen 3 Havana Transitions",
+    seoDescription: "Ray-Ban Meta Aviator Gen 3 (RW4016) Havana com lentes Transitions marrom: câmera 12 MP, vídeo 3K, Meta AI e 9 h de bateria.",
   },
 
   "demo-ray-ban-meta-skyler": {
@@ -453,10 +464,31 @@ ${META_GLASSES_FEATURES}
   },
 };
 
-/** Texto que o seed antigo gravava: só produtos ainda com ele recebem o conteúdo acima. */
+/** Texto que o seed antigo gravava: produtos ainda com ele recebem o conteúdo acima. */
 export const DEMO_PLACEHOLDER_PREFIX = "Este é um produto de demonstração criado pelo seed";
 
-/** Nomes antigos do seed: o nome só é trocado se ainda for um destes (nunca sobrescreve edição do painel). */
-export const LEGACY_DEMO_NAMES: Record<string, string> = {
-  "demo-ray-ban-meta-clubmaster": "[DEMO] Ray-Ban Meta Clubmaster",
+/**
+ * SHA-256 das descrições que versões anteriores DESTE arquivo já gravaram no banco.
+ * Se a descrição atual do produto bate com uma delas, ninguém a editou no painel e ela
+ * pode ser atualizada; se foi editada, o conteúdo do painel é preservado.
+ */
+export const PREVIOUS_SEEDED_DESCRIPTION_HASHES = new Set([
+  "9040f71eb70f15d6128ea4ff3a43041c878f0a91b285875a71a36a3b154ccf29", // retangular v1
+  "4ba6e0cb86aa4592afc06558f3b56cd47edf9e6dbf095001c9e97adc44cfb74b", // gatinho v1
+  "bceb7f8913a2cb9bfe6ac1d47b29b53a16ecef1257905ff07472d0f0e509b8ff", // piloto v1
+]);
+
+/** Nomes que o seed já usou: o nome só é trocado se ainda for um destes (nunca sobrescreve edição do painel). */
+export const LEGACY_DEMO_NAMES: Record<string, string[]> = {
+  "demo-ray-ban-meta-clubmaster": ["[DEMO] Ray-Ban Meta Clubmaster"],
+  "demo-ray-ban-meta-retangular": ["[DEMO] Ray-Ban Meta Retangular"],
+  "demo-ray-ban-meta-gatinho": ["[DEMO] Ray-Ban Meta Gatinho"],
+  "demo-ray-ban-meta-piloto": ["[DEMO] Ray-Ban Meta Piloto"],
+};
+
+/** Valores do campo "modelo" que o seed já usou (mesma regra dos nomes). */
+export const LEGACY_DEMO_MODELS: Record<string, string[]> = {
+  "demo-ray-ban-meta-retangular": ["Retangular"],
+  "demo-ray-ban-meta-gatinho": ["Gatinho"],
+  "demo-ray-ban-meta-piloto": ["Piloto"],
 };
