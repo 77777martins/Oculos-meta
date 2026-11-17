@@ -19,9 +19,12 @@ async function base() {
   ];
   for (const c of categories) await db.category.upsert({ where: { slug: c.slug }, update: {}, create: c });
 
-  // Migra o banner padrão antigo (4:3) para a arte panorâmica do hero de tela cheia.
-  // Só toca no banner que ainda aponta para a arte padrão antiga.
-  await db.banner.updateMany({ where: { imageUrl: "/images/banners/hero-visio.webp" }, data: { imageUrl: "/images/banners/hero-visio-wide.webp" } });
+  // Troca as artes padrão antigas (ilustrações) pela foto de campanha enviada pelo lojista.
+  // Só toca em banners que ainda apontam para uma arte padrão — nunca nos cadastrados no painel.
+  await db.banner.updateMany({
+    where: { imageUrl: { in: ["/images/banners/hero-visio.webp", "/images/banners/hero-visio-wide.webp"] } },
+    data: { imageUrl: "/images/banners/hero-campanha.webp" },
+  });
 
   // Banner principal (arte original da marca). Só cria se a loja ainda não tiver banners —
   // nunca substitui o que o administrador cadastrar em Admin > Banners.
@@ -30,7 +33,7 @@ async function base() {
       data: {
         title: "Veja o mundo de um jeito novo.",
         subtitle: "Óculos inteligentes com câmera, áudio aberto e assistente de voz. Compra segura, PIX e entrega rastreada para todo o Brasil.",
-        imageUrl: "/images/banners/hero-visio-wide.webp",
+        imageUrl: "/images/banners/hero-campanha.webp",
         linkUrl: "/produtos",
         ctaLabel: "Explorar modelos",
         sortOrder: 0,

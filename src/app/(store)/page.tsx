@@ -12,7 +12,7 @@ const FALLBACK_SLIDE: HeroSlide = {
   id: "padrao",
   title: "Veja o mundo de um jeito novo.",
   subtitle: "Óculos inteligentes com câmera, áudio aberto e assistente de voz.",
-  imageUrl: "/images/banners/hero-visio-wide.webp",
+  imageUrl: "/images/banners/hero-campanha.webp",
   linkUrl: "/produtos",
   ctaLabel: "Explorar modelos",
 };

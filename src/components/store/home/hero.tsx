@@ -58,7 +58,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
             inert={i !== index}
             className={cn("absolute inset-0 bg-ink transition-opacity duration-700", i === index ? "opacity-100" : "opacity-0")}
           >
-            {s.imageUrl && <Image src={s.imageUrl} alt="" fill priority={i === 0} sizes="(max-width: 1500px) 100vw, 1500px" className="object-cover object-[70%_50%]" />}
+            {s.imageUrl && <Image src={s.imageUrl} alt="" fill priority={i === 0} sizes="(max-width: 1500px) 100vw, 1500px" unoptimized={s.imageUrl.startsWith("/images/")} className="object-cover object-[88%_50%]" />}
             <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/30 to-transparent" />
             <div className="absolute inset-x-0 top-0 px-5 pt-6 sm:px-12 sm:pt-12 lg:px-20 lg:pt-14">
               <div className="max-w-[min(32rem,62%)] text-white">
