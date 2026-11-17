@@ -43,7 +43,7 @@ Passo a passo em `docs/DEPLOY.md` e `docs/PAGAMENTOS.md`.
 5. Compra real de valor baixo por PIX, seguida de reembolso pelo painel.
 
 ## 5. Fora do código
-- Autorização por escrito do fornecedor para as fotos (inclusive a do banner, que mostra um modelo).
+- ~~Autorização do fornecedor para as fotos~~ — concedida (informada pelo lojista em 17/11/2026). Guardar a comprovação por escrito.
 - Busca do nome "Visio" no INPI (classes 9 e 35).
 - 2FA na conta da Vercel.
 - Orientação contábil sobre venda sem CNPJ/nota fiscal.
