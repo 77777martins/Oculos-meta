@@ -84,6 +84,25 @@ async function demo() {
       variants: [{ sku: "DEMO-RBP-TARTARUGA", name: "Tartaruga · lente marrom", color: "Tartaruga", colorHex: "#5b4226", priceCents: 319900, salePriceCents: null, stock: 5 }],
     },
     {
+      slug: "demo-ray-ban-meta-clubmaster",
+      name: "[DEMO] Ray-Ban Meta Clubmaster",
+      model: "Clubmaster",
+      categoryId: rb.id,
+      isFeatured: true,
+      variants: [{ sku: "DEMO-RBC-PRETO", name: "Preto e dourado", color: "Preto", colorHex: "#111111", priceCents: 329900, salePriceCents: null, stock: 5 }],
+    },
+    {
+      slug: "demo-meta-capri",
+      name: "[DEMO] Meta Capri",
+      model: "Capri",
+      categoryId: mg.id,
+      isFeatured: true,
+      variants: [
+        { sku: "DEMO-MCP-TARTARUGA", name: "Tartaruga · lente transparente", color: "Tartaruga", colorHex: "#6b4a2b", priceCents: 329900, salePriceCents: null, stock: 5 },
+        { sku: "DEMO-MCP-CINZA", name: "Cinza translúcido · lente escura", color: "Cinza", colorHex: "#4a4a4a", priceCents: 339900, salePriceCents: null, stock: 5 },
+      ],
+    },
+    {
       slug: "demo-oakley-meta-vanguard",
       name: "[DEMO] Oakley Meta Vanguard",
       model: "Vanguard",
@@ -189,14 +208,19 @@ function sunGallery(file: string, label: string, sku: string): DemoImage[] {
   ];
 }
 
-function gallery(file: string, label: string, sku: string): DemoImage[] {
-  return [
-    { url: `${IMG}/${file}-lateral-esquerda.webp`, alt: `${label} — vista lateral esquerda`, variantSku: sku },
-    { url: `${IMG}/${file}-frente.webp`, alt: `${label} — vista frontal`, variantSku: sku },
-    { url: `${IMG}/${file}-lateral-direita.webp`, alt: `${label} — vista lateral direita`, variantSku: sku },
-    { url: `${IMG}/${file}-costas.webp`, alt: `${label} — vista traseira`, variantSku: sku },
-    { url: `${IMG}/${file}-caixa.webp`, alt: `${label} — conteúdo da embalagem`, variantSku: sku },
-  ];
+const VIEW_LABELS = {
+  "lateral-esquerda": "vista lateral esquerda",
+  frente: "vista frontal",
+  "lateral-direita": "vista lateral direita",
+  costas: "vista traseira",
+  caixa: "conteúdo da embalagem",
+} as const;
+type View = keyof typeof VIEW_LABELS;
+const ALL_VIEWS = Object.keys(VIEW_LABELS) as View[];
+
+/** Galeria padrão de um modelo; `views` permite omitir ângulos que o fornecedor não enviou. */
+function gallery(file: string, label: string, sku: string, views: View[] = ALL_VIEWS): DemoImage[] {
+  return views.map((view) => ({ url: `${IMG}/${file}-${view}.webp`, alt: `${label} — ${VIEW_LABELS[view]}`, variantSku: sku }));
 }
 
 /**
@@ -214,6 +238,11 @@ const DEMO_IMAGES: Record<string, DemoImage[]> = {
     ...gallery("meta-adventurer-cinza", "Meta Adventurer cinza translúcido com lente rosa", "DEMO-MAD-CINZA"),
   ],
   "demo-ray-ban-meta-piloto": sunGallery("ray-ban-meta-piloto-tartaruga", "Ray-Ban Meta Piloto tartaruga", "DEMO-RBP-TARTARUGA"),
+  "demo-ray-ban-meta-clubmaster": sunGallery("ray-ban-meta-clubmaster-preto", "Ray-Ban Meta Clubmaster preto e dourado", "DEMO-RBC-PRETO"),
+  "demo-meta-capri": [
+    ...gallery("meta-capri-tartaruga", "Meta Capri tartaruga com lente transparente", "DEMO-MCP-TARTARUGA", ["lateral-esquerda", "frente", "lateral-direita", "caixa"]),
+    ...gallery("meta-capri-cinza", "Meta Capri cinza translúcido com lente escura", "DEMO-MCP-CINZA", ["lateral-esquerda", "frente", "lateral-direita", "caixa"]),
+  ],
   "demo-oakley-meta-vanguard": gallery("oakley-meta-vanguard-preto", "Oakley Meta Vanguard preto com lente dourada", "DEMO-OKV-PRETO"),
   "demo-meta-fury": gallery("meta-fury-preto", "Meta Fury preto com lente marrom degradê", "DEMO-MFY-PRETO"),
   "demo-meta-starfire": gallery("meta-starfire-preto", "Meta Starfire preto", "DEMO-MSF-PRETO"),
