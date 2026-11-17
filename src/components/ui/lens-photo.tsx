@@ -28,8 +28,9 @@ export function LensPhoto({ src, sunSrc, alt, sizes, priority, className }: Prop
     <span className="absolute inset-0 mix-blend-multiply">
       <Image src={src} alt={alt} fill sizes={sizes} priority={priority} unoptimized={isBundledImage(src)} className={cn("object-contain", className)} />
       {sunSrc && (
-        // `eager`: a foto escura precisa estar carregada antes de a animação começar a mostrá-la.
-        <Image src={sunSrc} alt="" aria-hidden fill sizes={sizes} loading="eager" unoptimized={isBundledImage(sunSrc)} className={cn("animate-lens-sun object-contain", className)} />
+        // Baixa prioridade: não compete com a foto principal (maior elemento da tela). A animação
+        // começa com a foto escura invisível, dando tempo de ela carregar antes de aparecer.
+        <Image src={sunSrc} alt="" aria-hidden fill sizes={sizes} fetchPriority="low" unoptimized={isBundledImage(sunSrc)} className={cn("animate-lens-sun object-contain", className)} />
       )}
     </span>
   );

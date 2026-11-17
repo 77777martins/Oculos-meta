@@ -30,12 +30,12 @@ export function ProductRail({ title, products, viewAllHref }: { title: string; p
         </Link>
       </div>
       <ul ref={scroller} className="relative mt-4 flex snap-x gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:thin]">
-        {products.map((p, i) => (
+        {products.map((p) => (
           <li key={p.id} className="w-40 shrink-0 snap-start sm:w-52">
             <Link href={`/produtos/${p.slug}`} className="group block" aria-label={`${p.name} — ver detalhes`}>
               <div className="relative aspect-square bg-slate-50">
                 {p.image ? (
-                  <LensPhoto src={p.image.url} sunSrc={p.image.sunUrl} alt={p.image.alt} sizes="208px" priority={i < 2} className="p-3" />
+                  <LensPhoto src={p.image.url} sunSrc={p.image.sunUrl} alt={p.image.alt} sizes="208px" className="p-3" />
                 ) : (
                   <div className="flex h-full items-center justify-center p-4">
                     <GlassesArt />
