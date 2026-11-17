@@ -75,6 +75,31 @@ async function demo() {
       variants: [{ sku: "DEMO-OKH-PRETO", name: "Preto fosco", color: "Preto", colorHex: "#0f172a", priceCents: 349900, salePriceCents: null, stock: 2 }],
     },
     {
+      // Nome do modelo ainda não confirmado pelo lojista (não está legível nas fotos).
+      slug: "demo-ray-ban-meta-piloto",
+      name: "[DEMO] Ray-Ban Meta Piloto",
+      model: "Piloto",
+      categoryId: rb.id,
+      isFeatured: true,
+      variants: [{ sku: "DEMO-RBP-TARTARUGA", name: "Tartaruga · lente marrom", color: "Tartaruga", colorHex: "#5b4226", priceCents: 319900, salePriceCents: null, stock: 5 }],
+    },
+    {
+      slug: "demo-oakley-meta-vanguard",
+      name: "[DEMO] Oakley Meta Vanguard",
+      model: "Vanguard",
+      categoryId: ok.id,
+      isFeatured: true,
+      variants: [{ sku: "DEMO-OKV-PRETO", name: "Preto · lente dourada", color: "Preto", colorHex: "#1a1a1a", priceCents: 389900, salePriceCents: null, stock: 5 }],
+    },
+    {
+      slug: "demo-meta-fury",
+      name: "[DEMO] Meta Fury",
+      model: "Fury",
+      categoryId: mg.id,
+      isFeatured: true,
+      variants: [{ sku: "DEMO-MFY-PRETO", name: "Preto · lente marrom degradê", color: "Preto", colorHex: "#111111", priceCents: 339900, salePriceCents: null, stock: 5 }],
+    },
+    {
       slug: "demo-meta-adventurer",
       name: "[DEMO] Meta Adventurer",
       model: "Adventurer",
@@ -152,15 +177,15 @@ interface DemoImage {
 const IMG = "/images/produtos";
 
 /** Galeria padrão de um modelo: ¾, frente, ¾ oposto, costas e conteúdo da caixa. */
-/** Galeria de uma cor do Wayfarer com lente que escurece: a capa é a foto de lente clara + versão escurecida. */
-function wayfarerSunGallery(color: string, label: string, sku: string): DemoImage[] {
-  const file = `${IMG}/ray-ban-meta-wayfarer-${color}`;
+/** Galeria com lente que escurece: a capa é a foto de lente clara + a versão escurecida. */
+function sunGallery(file: string, label: string, sku: string): DemoImage[] {
+  const base = `${IMG}/${file}`;
   return [
-    { url: `${file}-lente-clara.webp`, sunUrl: `${file}-lente-escurecida.webp`, alt: `${label} — lente que escurece no sol`, variantSku: sku },
-    { url: `${file}-frente.webp`, alt: `${label} — vista frontal`, variantSku: sku },
-    { url: `${file}-lateral.webp`, alt: `${label} — vista lateral`, variantSku: sku },
-    { url: `${file}-costas.webp`, alt: `${label} — vista traseira`, variantSku: sku },
-    { url: `${file}-caixa.webp`, alt: `${label} — conteúdo da embalagem`, variantSku: sku },
+    { url: `${base}-lente-clara.webp`, sunUrl: `${base}-lente-escurecida.webp`, alt: `${label} — lente que escurece no sol`, variantSku: sku },
+    { url: `${base}-frente.webp`, alt: `${label} — vista frontal`, variantSku: sku },
+    { url: `${base}-lateral.webp`, alt: `${label} — vista lateral`, variantSku: sku },
+    { url: `${base}-costas.webp`, alt: `${label} — vista traseira`, variantSku: sku },
+    { url: `${base}-caixa.webp`, alt: `${label} — conteúdo da embalagem`, variantSku: sku },
   ];
 }
 
@@ -180,14 +205,17 @@ function gallery(file: string, label: string, sku: string): DemoImage[] {
  */
 const DEMO_IMAGES: Record<string, DemoImage[]> = {
   "demo-ray-ban-meta-wayfarer": [
-    ...wayfarerSunGallery("preto", "Ray-Ban Meta Wayfarer preto brilhante", "DEMO-RBW-PRETO"),
-    ...wayfarerSunGallery("azul", "Ray-Ban Meta Wayfarer azul brilhante", "DEMO-RBW-AZUL"),
+    ...sunGallery("ray-ban-meta-wayfarer-preto", "Ray-Ban Meta Wayfarer preto brilhante", "DEMO-RBW-PRETO"),
+    ...sunGallery("ray-ban-meta-wayfarer-azul", "Ray-Ban Meta Wayfarer azul brilhante", "DEMO-RBW-AZUL"),
     ...gallery("ray-ban-meta-wayfarer-fosco", "Ray-Ban Meta Wayfarer preto fosco", "DEMO-RBW-FOSCO"),
   ],
   "demo-meta-adventurer": [
     ...gallery("meta-adventurer-preto", "Meta Adventurer preto", "DEMO-MAD-PRETO"),
     ...gallery("meta-adventurer-cinza", "Meta Adventurer cinza translúcido com lente rosa", "DEMO-MAD-CINZA"),
   ],
+  "demo-ray-ban-meta-piloto": sunGallery("ray-ban-meta-piloto-tartaruga", "Ray-Ban Meta Piloto tartaruga", "DEMO-RBP-TARTARUGA"),
+  "demo-oakley-meta-vanguard": gallery("oakley-meta-vanguard-preto", "Oakley Meta Vanguard preto com lente dourada", "DEMO-OKV-PRETO"),
+  "demo-meta-fury": gallery("meta-fury-preto", "Meta Fury preto com lente marrom degradê", "DEMO-MFY-PRETO"),
   "demo-meta-starfire": gallery("meta-starfire-preto", "Meta Starfire preto", "DEMO-MSF-PRETO"),
 };
 
