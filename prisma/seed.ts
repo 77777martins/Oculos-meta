@@ -84,6 +84,15 @@ async function demo() {
       variants: [{ sku: "DEMO-RBP-TARTARUGA", name: "Tartaruga · lente marrom", color: "Tartaruga", colorHex: "#5b4226", priceCents: 319900, salePriceCents: null, stock: 5 }],
     },
     {
+      // Nome do modelo ainda não confirmado pelo lojista (não está legível nas fotos).
+      slug: "demo-ray-ban-meta-gatinho",
+      name: "[DEMO] Ray-Ban Meta Gatinho",
+      model: "Gatinho",
+      categoryId: rb.id,
+      isFeatured: true,
+      variants: [{ sku: "DEMO-RBG-PRETO", name: "Preto brilhante", color: "Preto", colorHex: "#111111", priceCents: 319900, salePriceCents: null, stock: 5 }],
+    },
+    {
       slug: "demo-ray-ban-meta-clubmaster",
       name: "[DEMO] Ray-Ban Meta Clubmaster",
       model: "Clubmaster",
@@ -238,6 +247,20 @@ const DEMO_IMAGES: Record<string, DemoImage[]> = {
     ...gallery("meta-adventurer-cinza", "Meta Adventurer cinza translúcido com lente rosa", "DEMO-MAD-CINZA"),
   ],
   "demo-ray-ban-meta-piloto": sunGallery("ray-ban-meta-piloto-tartaruga", "Ray-Ban Meta Piloto tartaruga", "DEMO-RBP-TARTARUGA"),
+  "demo-ray-ban-meta-skyler": gallery("ray-ban-meta-skyler-preto", "Ray-Ban Meta Skyler preto com lente verde", "DEMO-RBS-PRETO"),
+  "demo-ray-ban-meta-gatinho": sunGallery("ray-ban-meta-gatinho-preto", "Ray-Ban Meta Gatinho preto brilhante", "DEMO-RBG-PRETO"),
+  "demo-oakley-meta-hstn": [
+    {
+      url: `${IMG}/oakley-meta-hstn-preto-lente-clara.webp`,
+      sunUrl: `${IMG}/oakley-meta-hstn-preto-lente-escurecida.webp`,
+      alt: "Oakley Meta HSTN preto fosco — lente que escurece no sol",
+      variantSku: "DEMO-OKH-PRETO",
+    },
+    { url: `${IMG}/oakley-meta-hstn-preto-frente.webp`, alt: "Oakley Meta HSTN preto fosco — vista frontal", variantSku: "DEMO-OKH-PRETO" },
+    { url: `${IMG}/oakley-meta-hstn-preto-frente-inclinada.webp`, alt: "Oakley Meta HSTN preto fosco — vista frontal inclinada", variantSku: "DEMO-OKH-PRETO" },
+    { url: `${IMG}/oakley-meta-hstn-preto-costas.webp`, alt: "Oakley Meta HSTN preto fosco — vista traseira", variantSku: "DEMO-OKH-PRETO" },
+    { url: `${IMG}/oakley-meta-hstn-preto-caixa.webp`, alt: "Oakley Meta HSTN preto fosco — conteúdo da embalagem", variantSku: "DEMO-OKH-PRETO" },
+  ],
   "demo-ray-ban-meta-clubmaster": sunGallery("ray-ban-meta-clubmaster-preto", "Ray-Ban Meta Clubmaster preto e dourado", "DEMO-RBC-PRETO"),
   "demo-meta-capri": [
     ...gallery("meta-capri-tartaruga", "Meta Capri tartaruga com lente transparente", "DEMO-MCP-TARTARUGA", ["lateral-esquerda", "frente", "lateral-direita", "caixa"]),
