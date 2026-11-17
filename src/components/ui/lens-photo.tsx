@@ -24,10 +24,10 @@ interface Props {
 export function LensPhoto({ src, sunSrc, alt, sizes, priority, className }: Props) {
   return (
     <>
-      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} unoptimized={isBundledImage(src)} className={cn("object-contain", className)} />
+      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} unoptimized={isBundledImage(src)} className={cn("object-contain mix-blend-multiply", className)} />
       {sunSrc && (
         // `eager`: a foto escura precisa estar carregada antes de a animação começar a mostrá-la.
-        <Image src={sunSrc} alt="" aria-hidden fill sizes={sizes} loading="eager" unoptimized={isBundledImage(sunSrc)} className={cn("animate-lens-sun object-contain", className)} />
+        <Image src={sunSrc} alt="" aria-hidden fill sizes={sizes} loading="eager" unoptimized={isBundledImage(sunSrc)} className={cn("animate-lens-sun object-contain mix-blend-multiply", className)} />
       )}
     </>
   );

@@ -70,8 +70,8 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
   return (
     <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
       {/* Galeria */}
-      <div className="lg:sticky lg:top-24 lg:self-start">
-        <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-50 via-white to-brand-50 ring-1 ring-slate-100">
+      <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+        <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-white ring-1 ring-slate-200">
           {current ? (
             <div key={current.id} className="absolute inset-0 animate-fade-up">
               <LensPhoto src={current.url} sunSrc={current.sunUrl} alt={current.alt} sizes="(max-width: 1024px) 100vw, 50vw" priority className="p-6" />

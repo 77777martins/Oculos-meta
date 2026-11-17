@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Price } from "@/components/ui/price";
 import { GlassesArt } from "@/components/ui/glasses-art";
 import { LensPhoto, isBundledImage } from "@/components/ui/lens-photo";
+import { cn } from "@/lib/utils";
 
 export function ProductCard({ product, priority }: { product: ProductCardData; priority?: boolean }) {
   return (
@@ -13,9 +14,9 @@ export function ProductCard({ product, priority }: { product: ProductCardData; p
         <div className="relative aspect-[4/5] overflow-hidden bg-slate-50 transition-colors duration-500 group-hover:bg-slate-100">
           {product.image ? (
             <>
-<LensPhoto src={product.image.url} sunSrc={product.image.sunUrl} alt={product.image.alt} sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" priority={priority} className="p-4 transition-transform duration-700 group-hover:scale-[1.04]" />
+<LensPhoto src={product.image.url} sunSrc={product.image.sunUrl} alt={product.image.alt} sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" priority={priority} className={cn("p-4 transition-all duration-500", product.hoverImage && !product.image.sunUrl ? "group-hover:opacity-0" : "group-hover:scale-[1.04]")} />
               {product.hoverImage && !product.image.sunUrl && (
-                <Image src={product.hoverImage.url} alt="" fill sizes="25vw" unoptimized={isBundledImage(product.hoverImage.url)} className="object-contain p-4 opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
+                <Image src={product.hoverImage.url} alt="" fill sizes="25vw" unoptimized={isBundledImage(product.hoverImage.url)} className="object-contain p-4 opacity-0 mix-blend-multiply transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
               )}
             </>
           ) : (
