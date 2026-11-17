@@ -32,7 +32,7 @@
   --shadow-lift: 0 2px 4px rgb(10 15 30 / 0.04), 0 24px 48px -16px rgb(29 54 215 / 0.18);
 
   --animate-fade-up: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-lens-sun: lens-sun 9s ease-in-out infinite;
+  --animate-lens-sun: lens-sun 7s ease-in-out infinite;
   --animate-shimmer: shimmer 1.6s linear infinite;
   --animate-toast-in: toast-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 
@@ -42,8 +42,8 @@
   }
   /* Lente fotocromática: clara → escurece aos poucos → fica escura → clareia. */
   @keyframes lens-sun {
-    0%, 14% { opacity: 0; }
-    46%, 68% { opacity: 1; }
+    0%, 10% { opacity: 0; }
+    45%, 70% { opacity: 1; }
     100% { opacity: 0; }
   }
   @keyframes shimmer {
@@ -105,7 +105,7 @@
    (mostra a lente fotocromática) e continua ativo mesmo com "reduzir movimento". */
 @media (prefers-reduced-motion: reduce) {
   .animate-lens-sun {
-    animation-duration: 9s !important;
+    animation-duration: 7s !important;
     animation-iteration-count: infinite !important;
   }
 }
