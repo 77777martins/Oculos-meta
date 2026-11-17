@@ -2,10 +2,11 @@
  * Seed do banco.
  * - BASE (sempre): configurações da loja e categorias iniciais (editáveis no painel).
  * - DEMONSTRAÇÃO (somente com SEED_DEMO=true e fora de produção): produtos e
- *   frete identificados com "[DEMO]". Preços são FICTÍCIOS e NÃO há
- *   especificações técnicas inventadas — cadastre os dados reais no painel.
+ *   frete identificados com "[DEMO]". Preços e estoques são FICTÍCIOS.
+ *   Descrições e especificações vêm de prisma/catalog-content.ts (dados do lojista).
  */
 import { PrismaClient } from "@prisma/client";
+import { CATALOG_CONTENT, DEMO_PLACEHOLDER_PREFIX, LEGACY_DEMO_NAMES } from "./catalog-content";
 
 const db = new PrismaClient();
 
@@ -321,6 +322,31 @@ async function syncDemoImages() {
   }
 }
 
+/**
+ * Aplica o conteúdo comercial (prisma/catalog-content.ts) aos produtos de demonstração.
+ * Conservador: só atualiza produtos cuja descrição ainda é o texto provisório do seed, e só
+ * troca o nome se ainda for o nome antigo do seed — nunca sobrescreve edições do painel.
+ * Não toca em preço, estoque, variantes, imagens, slug nem status.
+ */
+async function syncCatalogContent() {
+  for (const [slug, c] of Object.entries(CATALOG_CONTENT)) {
+    const product = await db.product.findUnique({ where: { slug }, select: { id: true, name: true, description: true } });
+    if (!product || !product.description.startsWith(DEMO_PLACEHOLDER_PREFIX)) continue;
+    const renameFrom = LEGACY_DEMO_NAMES[slug];
+    await db.product.update({
+      where: { id: product.id },
+      data: {
+        ...(renameFrom && product.name === renameFrom ? { name: c.name } : {}),
+        shortDescription: c.shortDescription,
+        description: c.description,
+        specs: c.specs,
+        seoTitle: c.seoTitle,
+        seoDescription: c.seoDescription,
+      },
+    });
+  }
+}
+
 async function main() {
   await base();
   if (process.env.SEED_DEMO === "true") {
@@ -328,6 +354,7 @@ async function main() {
     if (process.env.NODE_ENV === "production" && process.env.DEMO_MODE !== "true") throw new Error("Dados de demonstração exigem DEMO_MODE=true em produção.");
     await demo();
     await syncDemoImages();
+    await syncCatalogContent();
     console.log("Seed base + DEMONSTRAÇÃO concluído.");
   } else {
     console.log("Seed base concluído (use SEED_DEMO=true para dados de demonstração em desenvolvimento).");

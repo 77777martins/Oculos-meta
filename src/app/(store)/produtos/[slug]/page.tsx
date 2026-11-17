@@ -11,6 +11,7 @@ import { getProductBySlug, getRelatedProducts } from "@/server/services/catalog"
 import { getProductReviews, getReviewEligibility } from "@/server/services/reviews";
 import { getStoreSettings } from "@/server/services/settings";
 import { ProductReviews } from "@/components/store/product-reviews";
+import { RichDescription } from "@/components/store/rich-description";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -105,8 +106,8 @@ export default async function ProductPage({ params }: Props) {
           <h2 id="descricao" className="text-2xl font-semibold">
             Descrição
           </h2>
-          {/* Texto renderizado como texto puro (React escapa HTML) — sem risco de XSS. */}
-          <div className="mt-4 space-y-4 whitespace-pre-line leading-7 text-slate-700">{product.description}</div>
+          {/* Texto puro estruturado (subtítulos e listas); o React escapa o conteúdo — sem risco de XSS. */}
+          <RichDescription text={product.description} />
         </section>
         <section className="lg:col-span-2" aria-labelledby="especificacoes">
           <h2 id="especificacoes" className="text-2xl font-semibold">

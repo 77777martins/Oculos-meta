@@ -14,6 +14,21 @@ Para cada modelo e cor:
 | Descrição | Texto de venda |
 | Especificações | Somente dados oficiais (câmera, bateria, áudio, peso, compatibilidade) |
 
+### Identificações a confirmar (pelo código gravado na haste ou etiqueta da caixa)
+O conteúdo comercial fica em `prisma/catalog-content.ts`. Enquanto não houver confirmação, a loja mostra
+nome descritivo e só características gerais; os números da identificação provável ficam guardados em
+`unconfirmedSpecs` e são publicados depois da confirmação.
+
+| Produto na loja | Identificação provável | O que fica pendente |
+|---|---|---|
+| Ray-Ban Meta Retangular | Blayzer Optics (Gen 2) | Nome, vídeo 3K, 12 MP, 6 microfones, 32 GB, 8 h + 48 h |
+| Ray-Ban Meta Gatinho | Zena (Gen 3) | Nome, vídeo 3K, 12 MP, 6 microfones, 32 GB, 9 h + 50 h |
+| Ray-Ban Meta Piloto | Aviator (Gen 3) | Nome, vídeo 3K, 12 MP, 6 microfones, 32 GB, 9 h + 50 h |
+| Ray-Ban Meta Skyler | Gen 1 ou Gen 2 | Vídeo, bateria e armazenamento |
+| Ray-Ban Meta Wayfarer | Geração não informada | Vídeo, bateria e armazenamento |
+
+Confirmado pelas fotos: **Ray-Ban Meta Audio Clubmaster** (haste: "RAY-BAN META · AUDIO · CLUBMASTER"), sem câmera.
+
 Confirmar também:
 - quais modelos têm mesmo lente que escurece (efeito ligado hoje: Wayfarer preto e azul, Clubmaster, Gatinho, Piloto e Oakley HSTN);
 - se as cores com estrela na haste (Adventurer cinza e Capri cinza) são "Lisa Edition";
