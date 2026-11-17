@@ -93,6 +93,15 @@ async function demo() {
       variants: [{ sku: "DEMO-RBG-PRETO", name: "Preto brilhante", color: "Preto", colorHex: "#111111", priceCents: 319900, salePriceCents: null, stock: 5 }],
     },
     {
+      // Nome do modelo ainda não confirmado pelo lojista (não está legível nas fotos).
+      slug: "demo-ray-ban-meta-retangular",
+      name: "[DEMO] Ray-Ban Meta Retangular",
+      model: "Retangular",
+      categoryId: rb.id,
+      isFeatured: true,
+      variants: [{ sku: "DEMO-RBR-TRANSLUCIDO", name: "Preto translúcido · lente transparente", color: "Preto translúcido", colorHex: "#2a2a2a", priceCents: 349900, salePriceCents: null, stock: 5 }],
+    },
+    {
       slug: "demo-ray-ban-meta-clubmaster",
       name: "[DEMO] Ray-Ban Meta Clubmaster",
       model: "Clubmaster",
@@ -261,6 +270,7 @@ const DEMO_IMAGES: Record<string, DemoImage[]> = {
     { url: `${IMG}/oakley-meta-hstn-preto-costas.webp`, alt: "Oakley Meta HSTN preto fosco — vista traseira", variantSku: "DEMO-OKH-PRETO" },
     { url: `${IMG}/oakley-meta-hstn-preto-caixa.webp`, alt: "Oakley Meta HSTN preto fosco — conteúdo da embalagem", variantSku: "DEMO-OKH-PRETO" },
   ],
+  "demo-ray-ban-meta-retangular": gallery("ray-ban-meta-retangular-preto-translucido", "Ray-Ban Meta Retangular preto translúcido", "DEMO-RBR-TRANSLUCIDO"),
   "demo-ray-ban-meta-clubmaster": sunGallery("ray-ban-meta-clubmaster-preto", "Ray-Ban Meta Clubmaster preto e dourado", "DEMO-RBC-PRETO"),
   "demo-meta-capri": [
     ...gallery("meta-capri-tartaruga", "Meta Capri tartaruga com lente transparente", "DEMO-MCP-TARTARUGA", ["lateral-esquerda", "frente", "lateral-direita", "caixa"]),
