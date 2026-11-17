@@ -90,9 +90,12 @@ test("administrador acessa dashboard, pedidos e produtos", async ({ page }) => {
   await expect(page.getByText("Faturamento diário")).toBeVisible();
   await page.getByRole("link", { name: "Pedidos" }).first().click();
   await expect(page.getByRole("heading", { name: "Pedidos" })).toBeVisible();
-  await page.getByRole("link", { name: "Produtos e estoque" }).click();
+  await page.getByRole("link", { name: "Produtos", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Produtos e estoque" })).toBeVisible();
   expect(errors).toEqual([]);
+  await page.goto("/admin/precos-estoque");
+  await expect(page.getByRole("heading", { name: "Preços e estoque" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Salvar alterações" })).toBeDisabled();
   await page.goto("/admin/avaliacoes");
   await expect(page.getByRole("heading", { name: "Avaliações de clientes" })).toBeVisible();
   await page.goto("/admin/lancamento");

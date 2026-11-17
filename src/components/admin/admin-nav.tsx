@@ -6,6 +6,7 @@ import {
   BarChart3,
   Boxes,
   ClipboardList,
+  Coins,
   CreditCard,
   FolderTree,
   Image as ImageIcon,
@@ -41,7 +42,8 @@ const GROUPS: Array<{ title: string; items: Array<{ href: string; label: string;
   {
     title: "Catálogo",
     items: [
-      { href: "/admin/produtos", label: "Produtos e estoque", icon: Boxes, permission: "products:read" },
+      { href: "/admin/produtos", label: "Produtos", icon: Boxes, permission: "products:read" },
+      { href: "/admin/precos-estoque", label: "Preços e estoque", icon: Coins, permission: "products:write" },
       { href: "/admin/categorias", label: "Categorias", icon: FolderTree, permission: "categories:write" },
       { href: "/admin/cupons", label: "Cupons", icon: Tag, permission: "coupons:write" },
       { href: "/admin/banners", label: "Banners", icon: Megaphone, permission: "banners:write" },

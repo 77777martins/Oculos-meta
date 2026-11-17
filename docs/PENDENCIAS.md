@@ -37,9 +37,10 @@ Passo a passo em `docs/DEPLOY.md` e `docs/PAGAMENTOS.md`.
 
 ## 4. Virada para produção
 1. Merge do PR para `main` e Vercel apontando para `main`.
-2. Apagar produtos, pedidos, frete e cupom de demonstração.
-3. `DEMO_MODE=false` e `SEED_DEMO` desligado.
-4. Compra real de valor baixo por PIX, seguida de reembolso pelo painel.
+2. Apagar pedidos, frete e cupom de demonstração: `npm run launch:cleanup` (simula) e `npm run launch:cleanup -- --confirm` (apaga). Produtos e fotos são mantidos.
+3. Lançar preços e estoque reais em **Admin → Preços e estoque** (todas as variantes numa tela só).
+4. `DEMO_MODE=false` e `SEED_DEMO` desligado.
+5. Compra real de valor baixo por PIX, seguida de reembolso pelo painel.
 
 ## 5. Fora do código
 - Autorização por escrito do fornecedor para as fotos (inclusive a do banner, que mostra um modelo).

@@ -82,7 +82,7 @@ export async function getLaunchChecklist(): Promise<ChecklistGroup[]> {
         { label: "Rotina automática protegida", done: !!e.CRON_SECRET, hint: "Defina CRON_SECRET (expira pedidos não pagos e sincroniza rastreio)." },
         { label: "Endereço da loja em HTTPS", done: e.APP_URL.startsWith("https://") && !e.APP_URL.includes("localhost"), hint: "Defina APP_URL com o domínio definitivo (https://...)." },
         { label: "Modo demonstração desligado", done: !e.DEMO_MODE, hint: "DEMO_MODE=true mostra a faixa amarela e bloqueia o Google. Desligue só quando todo o resto estiver pronto." },
-        { label: "Sem pedidos e cupons de teste", done: testOrders === 0 && demoCoupons === 0, hint: `${testOrders} pedido(s) e ${demoCoupons} cupom(ns) de teste no banco. Apague antes de abrir a loja.`, optional: true },
+        { label: "Sem pedidos e cupons de teste", done: testOrders === 0 && demoCoupons === 0, hint: `${testOrders} pedido(s) e ${demoCoupons} cupom(ns) de teste no banco. Antes de abrir a loja, rode "npm run launch:cleanup -- --confirm" (eu faço isso na virada).`, optional: true },
       ],
     },
   ];

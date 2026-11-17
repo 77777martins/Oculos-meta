@@ -93,3 +93,25 @@ export const catalogQuerySchema = z.object({
 
 export type ProductInput = z.input<typeof productSchema>;
 export type VariantInput = z.input<typeof variantSchema>;
+
+/** Edição em massa de preço e estoque (Admin > Preços e estoque). */
+export const bulkVariantUpdateSchema = z.strictObject({
+  reason: cleanText(200, 3),
+  items: z
+    .array(
+      z
+        .strictObject({
+          variantId: idSchema,
+          priceCents: centsSchema.min(1, "Preço obrigatório."),
+          salePriceCents: centsSchema.min(1).nullable(),
+          /** Estoque físico desejado: vira um ajuste no livro-razão (diferença para o atual). */
+          stock: z.number().int().min(0).max(100_000),
+        })
+        .refine((v) => v.salePriceCents == null || v.salePriceCents < v.priceCents, {
+          message: "O preço promocional deve ser menor que o preço normal.",
+          path: ["salePriceCents"],
+        }),
+    )
+    .min(1)
+    .max(500),
+});
