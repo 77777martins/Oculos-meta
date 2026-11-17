@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { effectivePriceCents } from "@/lib/money";
 import { ProductPurchase } from "@/components/store/product-purchase";
-import { ProductGrid } from "@/components/store/product-card";
+import { ProductRail } from "@/components/store/home/product-rail";
 import { getProductBySlug, getRelatedProducts } from "@/server/services/catalog";
 import { getStoreSettings } from "@/server/services/settings";
 
@@ -36,7 +36,7 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [user, settings, related] = await Promise.all([getCurrentUser(), getStoreSettings(), getRelatedProducts(product.id, product.categoryId)]);
+  const [user, settings, related] = await Promise.all([getCurrentUser(), getStoreSettings(), getRelatedProducts(product.id, product.categoryId, 8)]);
   const isFavorite = user ? (await db.favorite.count({ where: { userId: user.id, productId: product.id } })) > 0 : false;
   const prices = product.variants.map((v) => effectivePriceCents(v));
   const appUrl = process.env.APP_URL ?? "";
@@ -123,14 +123,9 @@ export default async function ProductPage({ params }: Props) {
       </div>
 
       {related.length > 0 && (
-        <section className="mt-24" aria-labelledby="relacionados">
-          <h2 id="relacionados" className="text-2xl font-semibold">
-            Você também pode gostar
-          </h2>
-          <div className="mt-8">
-            <ProductGrid products={related} />
-          </div>
-        </section>
+        <div className="mt-20 border-t border-slate-100 pt-4">
+          <ProductRail title="Você também pode gostar" products={related} viewAllHref={product.category ? `/categorias/${product.category.slug}` : "/produtos"} />
+        </div>
       )}
     </div>
   );

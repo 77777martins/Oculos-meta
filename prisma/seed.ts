@@ -187,6 +187,10 @@ async function demo() {
       await db.inventoryMovement.create({ data: { variantId: variant.id, type: "RESTOCK", quantity: v.stock, reason: "[DEMO] Estoque inicial do seed" } });
     }
   }
+  // Marca exibida no cartão: versões antigas do seed deixavam todos como "Meta" (padrão do banco).
+  for (const [categoryId, brand] of [[rb.id, "Ray-Ban Meta"], [ok.id, "Oakley Meta"]] as const) {
+    await db.product.updateMany({ where: { slug: { startsWith: "demo-" }, categoryId, brand: "Meta" }, data: { brand } });
+  }
   // O Wayfarer azul do seed antigo chamava-se "Azul translúcido"; a foto real mostra azul brilhante.
   await db.productVariant.updateMany({ where: { sku: "DEMO-RBW-AZUL", name: "Azul translúcido" }, data: { name: "Azul brilhante", colorHex: "#1e2a5a" } });
 

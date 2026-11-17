@@ -12,6 +12,7 @@ import {
   Inbox,
   LayoutDashboard,
   Megaphone,
+  Rocket,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -28,6 +29,7 @@ const GROUPS: Array<{ title: string; items: Array<{ href: string; label: string;
     title: "Visão geral",
     items: [
       { href: "/admin", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
+      { href: "/admin/lancamento", label: "Pronto para vender", icon: Rocket, permission: "settings:write" },
       { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList, permission: "orders:read" },
       { href: "/admin/pagamentos", label: "Financeiro", icon: CreditCard, permission: "payments:read" },
       { href: "/admin/clientes", label: "Clientes", icon: Users, permission: "customers:read" },
