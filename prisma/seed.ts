@@ -54,7 +54,8 @@ async function demo() {
       isFeatured: true,
       variants: [
         { sku: "DEMO-RBW-PRETO", name: "Preto brilhante", color: "Preto", colorHex: "#111111", priceCents: 299900, salePriceCents: 279900, stock: 12 },
-        { sku: "DEMO-RBW-AZUL", name: "Azul translúcido", color: "Azul", colorHex: "#1e3a8a", priceCents: 299900, salePriceCents: null, stock: 4 },
+        { sku: "DEMO-RBW-AZUL", name: "Azul brilhante", color: "Azul", colorHex: "#1e2a5a", priceCents: 299900, salePriceCents: null, stock: 4 },
+        { sku: "DEMO-RBW-FOSCO", name: "Preto fosco · lente polarizada", color: "Preto fosco", colorHex: "#2b2b2b", priceCents: 319900, salePriceCents: null, stock: 5 },
       ],
     },
     {
@@ -79,7 +80,10 @@ async function demo() {
       model: "Adventurer",
       categoryId: mg.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-MAD-PRETO", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 329900, salePriceCents: null, stock: 5 }],
+      variants: [
+        { sku: "DEMO-MAD-PRETO", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 329900, salePriceCents: null, stock: 5 },
+        { sku: "DEMO-MAD-CINZA", name: "Cinza translúcido · lente rosa", color: "Cinza", colorHex: "#6b6b6b", priceCents: 339900, salePriceCents: null, stock: 5 },
+      ],
     },
     {
       slug: "demo-meta-starfire",
@@ -92,30 +96,34 @@ async function demo() {
   ];
 
   for (const p of products) {
-    const exists = await db.product.findUnique({ where: { slug: p.slug } });
-    if (exists) continue;
-    const product = await db.product.create({
-      data: {
-        slug: p.slug,
-        name: p.name,
-        model: p.model,
-        categoryId: p.categoryId,
-        isFeatured: p.isFeatured,
-        status: "PUBLISHED",
-        publishedAt: new Date(),
-        shortDescription: "Produto de DEMONSTRAÇÃO para testes em ambiente de desenvolvimento. Preço fictício.",
-        description:
-          "Este é um produto de demonstração criado pelo seed de desenvolvimento.\n\nSubstitua por dados oficiais e verificados no painel administrativo antes de operar em produção. Nenhuma especificação técnica foi cadastrada propositalmente.",
-        specs: [],
-      },
-    });
+    const product =
+      (await db.product.findUnique({ where: { slug: p.slug } })) ??
+      (await db.product.create({
+        data: {
+          slug: p.slug,
+          name: p.name,
+          model: p.model,
+          categoryId: p.categoryId,
+          isFeatured: p.isFeatured,
+          status: "PUBLISHED",
+          publishedAt: new Date(),
+          shortDescription: "Produto de DEMONSTRAÇÃO para testes em ambiente de desenvolvimento. Preço fictício.",
+          description:
+            "Este é um produto de demonstração criado pelo seed de desenvolvimento.\n\nSubstitua por dados oficiais e verificados no painel administrativo antes de operar em produção. Nenhuma especificação técnica foi cadastrada propositalmente.",
+          specs: [],
+        },
+      }));
+    // Cria só as variantes que ainda não existem (por SKU): não altera preço/estoque já ajustados no painel.
     for (const [i, v] of p.variants.entries()) {
+      if (await db.productVariant.findUnique({ where: { sku: v.sku } })) continue;
       const variant = await db.productVariant.create({
         data: { productId: product.id, sku: v.sku, name: v.name, color: v.color, colorHex: v.colorHex, priceCents: v.priceCents, salePriceCents: v.salePriceCents, stock: v.stock, sortOrder: i },
       });
       await db.inventoryMovement.create({ data: { variantId: variant.id, type: "RESTOCK", quantity: v.stock, reason: "[DEMO] Estoque inicial do seed" } });
     }
   }
+  // O Wayfarer azul do seed antigo chamava-se "Azul translúcido"; a foto real mostra azul brilhante.
+  await db.productVariant.updateMany({ where: { sku: "DEMO-RBW-AZUL", name: "Azul translúcido" }, data: { name: "Azul brilhante", colorHex: "#1e2a5a" } });
 
   if ((await db.shippingZone.count()) === 0) {
     await db.shippingZone.createMany({
@@ -144,6 +152,18 @@ interface DemoImage {
 const IMG = "/images/produtos";
 
 /** Galeria padrão de um modelo: ¾, frente, ¾ oposto, costas e conteúdo da caixa. */
+/** Galeria de uma cor do Wayfarer com lente que escurece: a capa é a foto de lente clara + versão escurecida. */
+function wayfarerSunGallery(color: string, label: string, sku: string): DemoImage[] {
+  const file = `${IMG}/ray-ban-meta-wayfarer-${color}`;
+  return [
+    { url: `${file}-lente-clara.webp`, sunUrl: `${file}-lente-escurecida.webp`, alt: `${label} — lente que escurece no sol`, variantSku: sku },
+    { url: `${file}-frente.webp`, alt: `${label} — vista frontal`, variantSku: sku },
+    { url: `${file}-lateral.webp`, alt: `${label} — vista lateral`, variantSku: sku },
+    { url: `${file}-costas.webp`, alt: `${label} — vista traseira`, variantSku: sku },
+    { url: `${file}-caixa.webp`, alt: `${label} — conteúdo da embalagem`, variantSku: sku },
+  ];
+}
+
 function gallery(file: string, label: string, sku: string): DemoImage[] {
   return [
     { url: `${IMG}/${file}-lateral-esquerda.webp`, alt: `${label} — vista lateral esquerda`, variantSku: sku },
@@ -160,33 +180,32 @@ function gallery(file: string, label: string, sku: string): DemoImage[] {
  */
 const DEMO_IMAGES: Record<string, DemoImage[]> = {
   "demo-ray-ban-meta-wayfarer": [
-    {
-      url: `${IMG}/ray-ban-meta-wayfarer-preto-lente-clara.webp`,
-      sunUrl: `${IMG}/ray-ban-meta-wayfarer-preto-lente-escurecida.webp`,
-      alt: "Ray-Ban Meta Wayfarer preto brilhante — lente que escurece no sol",
-      variantSku: "DEMO-RBW-PRETO",
-    },
-    { url: `${IMG}/ray-ban-meta-wayfarer-preto-frente.webp`, alt: "Ray-Ban Meta Wayfarer preto brilhante — vista frontal", variantSku: "DEMO-RBW-PRETO" },
-    { url: `${IMG}/ray-ban-meta-wayfarer-preto-lateral.webp`, alt: "Ray-Ban Meta Wayfarer preto brilhante — vista lateral", variantSku: "DEMO-RBW-PRETO" },
-    { url: `${IMG}/ray-ban-meta-wayfarer-preto-costas.webp`, alt: "Ray-Ban Meta Wayfarer preto brilhante — vista traseira", variantSku: "DEMO-RBW-PRETO" },
-    { url: `${IMG}/ray-ban-meta-wayfarer-preto-caixa.webp`, alt: "Ray-Ban Meta Wayfarer preto brilhante — conteúdo da embalagem", variantSku: "DEMO-RBW-PRETO" },
+    ...wayfarerSunGallery("preto", "Ray-Ban Meta Wayfarer preto brilhante", "DEMO-RBW-PRETO"),
+    ...wayfarerSunGallery("azul", "Ray-Ban Meta Wayfarer azul brilhante", "DEMO-RBW-AZUL"),
+    ...gallery("ray-ban-meta-wayfarer-fosco", "Ray-Ban Meta Wayfarer preto fosco", "DEMO-RBW-FOSCO"),
   ],
-  "demo-meta-adventurer": gallery("meta-adventurer-preto", "Meta Adventurer preto", "DEMO-MAD-PRETO"),
+  "demo-meta-adventurer": [
+    ...gallery("meta-adventurer-preto", "Meta Adventurer preto", "DEMO-MAD-PRETO"),
+    ...gallery("meta-adventurer-cinza", "Meta Adventurer cinza translúcido com lente rosa", "DEMO-MAD-CINZA"),
+  ],
   "demo-meta-starfire": gallery("meta-starfire-preto", "Meta Starfire preto", "DEMO-MSF-PRETO"),
 };
 
-/** Imagens que versões anteriores do seed cadastraram: podem ser trocadas pela galeria atual. */
-const LEGACY_DEMO_IMAGE_URLS = new Set([`${IMG}/ray-ban-meta-wayfarer-gen1-preto.webp`]);
+/** Imagens que versões anteriores do seed cadastraram e que não existem mais. */
+const LEGACY_DEMO_IMAGE_URLS = [`${IMG}/ray-ban-meta-wayfarer-gen1-preto.webp`];
+const SEED_IMAGE_URLS = new Set([...LEGACY_DEMO_IMAGE_URLS, ...Object.values(DEMO_IMAGES).flatMap((list) => list.map((i) => i.url))]);
 
 /**
- * Cadastra a galeria de demonstração. Idempotente e conservador: só escreve quando o produto
- * não tem imagens ou só tem imagens antigas do próprio seed — nunca troca fotos do administrador.
+ * Cadastra/atualiza a galeria de demonstração. Idempotente e conservador: só escreve quando
+ * todas as imagens atuais do produto vieram do próprio seed — nunca troca fotos do administrador.
  */
 async function syncDemoImages() {
   for (const [slug, images] of Object.entries(DEMO_IMAGES)) {
-    const product = await db.product.findUnique({ where: { slug }, include: { variants: true, images: { select: { url: true } } } });
+    const product = await db.product.findUnique({ where: { slug }, include: { variants: true, images: { orderBy: { sortOrder: "asc" }, select: { url: true } } } });
     if (!product) continue;
-    if (!product.images.every((i) => LEGACY_DEMO_IMAGE_URLS.has(i.url))) continue;
+    if (!product.images.every((i) => SEED_IMAGE_URLS.has(i.url))) continue;
+    const current = product.images.map((i) => i.url).join("|");
+    if (current === images.map((i) => i.url).join("|")) continue;
     await db.$transaction([
       db.productImage.deleteMany({ where: { productId: product.id } }),
       db.productImage.createMany({
