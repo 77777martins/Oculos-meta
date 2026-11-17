@@ -12,7 +12,7 @@ const publicWhere: Prisma.ProductWhereInput = {
 };
 
 const cardInclude = {
-  images: { orderBy: { sortOrder: "asc" }, take: 2, select: { url: true, alt: true } },
+  images: { orderBy: { sortOrder: "asc" }, take: 2, select: { url: true, alt: true, sunUrl: true } },
   variants: {
     where: { isActive: true },
     orderBy: { sortOrder: "asc" },
@@ -31,7 +31,8 @@ export interface ProductCardData {
   brand: string;
   category: string | null;
   categorySlug: string | null;
-  image: { url: string; alt: string } | null;
+  /** `sunUrl`: mesma foto com a lente escurecida (efeito automático). */
+  image: { url: string; alt: string; sunUrl: string | null } | null;
   hoverImage: { url: string; alt: string } | null;
   priceCents: number;
   listPriceCents: number;

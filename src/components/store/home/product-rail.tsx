@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GlassesArt } from "@/components/ui/glasses-art";
+import { LensPhoto } from "@/components/ui/lens-photo";
 import { Price } from "@/components/ui/price";
 import type { ProductCardData } from "@/server/services/catalog";
 
@@ -35,7 +35,7 @@ export function ProductRail({ title, products, viewAllHref }: { title: string; p
             <Link href={`/produtos/${p.slug}`} className="group block" aria-label={`${p.name} — ver detalhes`}>
               <div className="relative aspect-square bg-slate-50">
                 {p.image ? (
-                  <Image src={p.image.url} alt={p.image.alt} fill sizes="208px" priority={i < 2} className="object-contain p-3" />
+                  <LensPhoto src={p.image.url} sunSrc={p.image.sunUrl} alt={p.image.alt} sizes="208px" priority={i < 2} className="p-3" />
                 ) : (
                   <div className="flex h-full items-center justify-center p-4">
                     <GlassesArt />

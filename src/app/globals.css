@@ -101,3 +101,12 @@
     scroll-behavior: auto !important;
   }
 }
+/* O escurecimento da lente é um esmaecimento lento, sem deslocamento: é conteúdo do produto
+   (mostra a lente fotocromática) e continua ativo mesmo com "reduzir movimento". */
+@media (prefers-reduced-motion: reduce) {
+  .animate-lens-sun {
+    animation-duration: 9s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+

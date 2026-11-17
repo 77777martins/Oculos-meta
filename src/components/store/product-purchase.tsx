@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { LensPhoto, isBundledImage } from "@/components/ui/lens-photo";
 import { useMemo, useState } from "react";
 import { Check, Minus, Plus, ShoppingBag, Sun, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -73,9 +74,7 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
         <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-50 via-white to-brand-50 ring-1 ring-slate-100">
           {current ? (
             <div key={current.id} className="absolute inset-0 animate-fade-up">
-              <Image src={current.url} alt={current.alt} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="object-contain p-6" />
-              {/* Lente que escurece no sol: a mesma foto com a lente escura aparece e some sozinha. */}
-              {current.sunUrl && <Image src={current.sunUrl} alt="" aria-hidden fill sizes="(max-width: 1024px) 100vw, 50vw" className="animate-lens-sun object-contain p-6" />}
+              <LensPhoto src={current.url} sunSrc={current.sunUrl} alt={current.alt} sizes="(max-width: 1024px) 100vw, 50vw" priority className="p-6" />
             </div>
           ) : (
             <div className="flex h-full items-center justify-center p-12">
@@ -111,7 +110,7 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
                 onClick={() => setActiveImage(i)}
                 className={cn("relative size-20 shrink-0 overflow-hidden rounded-2xl ring-2 transition-all", i === activeImage ? "ring-brand-600" : "ring-transparent opacity-70 hover:opacity-100")}
               >
-                <Image src={img.url} alt="" fill sizes="80px" className="object-cover" />
+                <Image src={img.url} alt="" fill sizes="80px" unoptimized={isBundledImage(img.url)} className="object-cover" />
               </button>
             ))}
           </div>

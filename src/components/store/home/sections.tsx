@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { CreditCard, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { GlassesArt } from "@/components/ui/glasses-art";
+import { LensPhoto } from "@/components/ui/lens-photo";
 import { formatBRL } from "@/lib/money";
 import type { ProductCardData } from "@/server/services/catalog";
 
@@ -24,7 +24,7 @@ function Thumb({ product }: { product: ProductCardData | null }) {
   return (
     <div className="relative aspect-square bg-slate-50">
       {product?.image ? (
-        <Image src={product.image.url} alt="" fill sizes="(max-width: 640px) 45vw, 160px" className="object-contain p-2" />
+        <LensPhoto src={product.image.url} sunSrc={product.image.sunUrl} alt="" sizes="(max-width: 640px) 45vw, 160px" className="p-2" />
       ) : (
         <div className="flex h-full items-center justify-center p-3">
           <GlassesArt />
@@ -57,7 +57,7 @@ export function CollectionCard({ name, slug, products }: { name: string; slug: s
         <Link href={items[0] ? `/produtos/${items[0].slug}` : `/categorias/${slug}`} className="group block">
           <div className="relative aspect-[4/3.6] bg-slate-50">
             {items[0]?.image ? (
-              <Image src={items[0].image.url} alt="" fill sizes="(max-width: 640px) 90vw, 330px" className="object-contain p-4" />
+              <LensPhoto src={items[0].image.url} sunSrc={items[0].image.sunUrl} alt="" sizes="(max-width: 640px) 90vw, 330px" className="p-4" />
             ) : (
               <div className="flex h-full items-center justify-center bg-ink p-8">
                 <GlassesArt tone="light" />
