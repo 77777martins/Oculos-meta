@@ -95,6 +95,7 @@ export async function saveProduct(id: string | null, data: ProductData, actorId:
             alt: img.alt,
             credit: img.credit,
             creditUrl: img.creditUrl ?? null,
+            sunUrl: img.sunUrl ?? null,
             sortOrder: i,
           })),
         });

@@ -124,7 +124,7 @@ export const getProductBySlug = cache(async (slug: string) => {
     where: { slug, ...publicWhere },
     include: {
       category: { select: { name: true, slug: true } },
-      images: { orderBy: { sortOrder: "asc" }, select: { id: true, url: true, alt: true, variantId: true, width: true, height: true, credit: true, creditUrl: true } },
+      images: { orderBy: { sortOrder: "asc" }, select: { id: true, url: true, alt: true, variantId: true, width: true, height: true, credit: true, creditUrl: true, sunUrl: true } },
       variants: {
         where: { isActive: true },
         orderBy: { sortOrder: "asc" },

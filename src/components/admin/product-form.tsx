@@ -183,7 +183,7 @@ export function ProductForm({ productId, initial, categories }: { productId?: st
             </div>
           </Panel>
 
-          <Panel title="Imagens" actions={<ImageUploadButton folder="products" label="Enviar" onUploaded={(url) => images.append({ url, alt: form.getValues("name") || "Imagem do produto", variantSku: null, credit: null, creditUrl: null })} />}>
+          <Panel title="Imagens" actions={<ImageUploadButton folder="products" label="Enviar" onUploaded={(url) => images.append({ url, alt: form.getValues("name") || "Imagem do produto", variantSku: null, credit: null, creditUrl: null, sunUrl: null })} />}>
             <p className="mb-3 text-xs text-slate-500">Use apenas imagens próprias, oficiais autorizadas ou licenciadas. A primeira é a capa.</p>
             {images.fields.length === 0 && <p className="text-sm text-slate-500">Nenhuma imagem.</p>}
             <ul className="space-y-3">
@@ -196,6 +196,7 @@ export function ProductForm({ productId, initial, categories }: { productId?: st
                     <Input aria-label="Texto alternativo" placeholder="Texto alternativo" {...register(`images.${i}.alt`)} />
                     <Input aria-label="Crédito da imagem" placeholder="Crédito/licença (se exigido)" {...register(`images.${i}.credit`)} />
                     <Input aria-label="Link da origem da imagem" placeholder="Link da origem (https://…)" {...register(`images.${i}.creditUrl`)} />
+                    <Input aria-label="Foto com a lente escurecida" placeholder="Lente que escurece: endereço da mesma foto com a lente escura (opcional)" {...register(`images.${i}.sunUrl`)} />
                     <select
                       aria-label="Variante desta imagem"
                       className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700"

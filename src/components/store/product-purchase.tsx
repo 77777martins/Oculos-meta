@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Check, Minus, Plus, ShoppingBag, Truck } from "lucide-react";
+import { Check, Minus, Plus, ShoppingBag, Sun, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { GlassesArt } from "@/components/ui/glasses-art";
@@ -29,7 +29,7 @@ interface Variant {
 interface Props {
   product: { id: string; name: string; brand: string; model: string; shortDescription: string | null };
   variants: Variant[];
-  images: Array<{ id: string; url: string; alt: string; variantId: string | null; credit?: string | null; creditUrl?: string | null }>;
+  images: Array<{ id: string; url: string; alt: string; variantId: string | null; credit?: string | null; creditUrl?: string | null; sunUrl?: string | null }>;
   maxInstallments: number;
   isFavorite: boolean;
   isLoggedIn: boolean;
@@ -72,13 +72,22 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
       <div className="lg:sticky lg:top-24 lg:self-start">
         <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-50 via-white to-brand-50 ring-1 ring-slate-100">
           {current ? (
-            <Image key={current.id} src={current.url} alt={current.alt} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="animate-fade-up object-contain p-6" />
+            <div key={current.id} className="absolute inset-0 animate-fade-up">
+              <Image src={current.url} alt={current.alt} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="object-contain p-6" />
+              {/* Lente que escurece no sol: a mesma foto com a lente escura aparece e some sozinha. */}
+              {current.sunUrl && <Image src={current.sunUrl} alt="" aria-hidden fill sizes="(max-width: 1024px) 100vw, 50vw" className="animate-lens-sun object-contain p-6" />}
+            </div>
           ) : (
             <div className="flex h-full items-center justify-center p-12">
               <GlassesArt />
             </div>
           )}
         </div>
+        {current?.sunUrl && (
+          <p className="mt-2 flex items-center gap-1.5 px-2 text-xs text-slate-600">
+            <Sun className="size-3.5 text-amber-500" aria-hidden /> Lente que escurece no sol — animação ilustrativa do efeito.
+          </p>
+        )}
         {current?.credit && (
           <p className="mt-2 text-right text-[11px] text-slate-500">
             {current.creditUrl ? (

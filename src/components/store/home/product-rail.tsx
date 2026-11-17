@@ -29,7 +29,7 @@ export function ProductRail({ title, products, viewAllHref }: { title: string; p
           Ver mais
         </Link>
       </div>
-      <ul ref={scroller} className="mt-4 flex snap-x gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:thin]">
+      <ul ref={scroller} className="relative mt-4 flex snap-x gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:thin]">
         {products.map((p, i) => (
           <li key={p.id} className="w-40 shrink-0 snap-start sm:w-52">
             <Link href={`/produtos/${p.slug}`} className="group block" aria-label={`${p.name} — ver detalhes`}>
