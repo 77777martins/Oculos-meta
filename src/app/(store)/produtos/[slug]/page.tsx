@@ -8,7 +8,9 @@ import { effectivePriceCents } from "@/lib/money";
 import { ProductPurchase } from "@/components/store/product-purchase";
 import { ProductRail } from "@/components/store/home/product-rail";
 import { getProductBySlug, getRelatedProducts } from "@/server/services/catalog";
+import { getProductReviews, getReviewEligibility } from "@/server/services/reviews";
 import { getStoreSettings } from "@/server/services/settings";
+import { ProductReviews } from "@/components/store/product-reviews";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -37,6 +39,7 @@ export default async function ProductPage({ params }: Props) {
   if (!product) notFound();
 
   const [user, settings, related] = await Promise.all([getCurrentUser(), getStoreSettings(), getRelatedProducts(product.id, product.categoryId, 8)]);
+  const [reviews, eligibility] = await Promise.all([getProductReviews(product.id), getReviewEligibility(user?.id ?? null, product.id)]);
   const isFavorite = user ? (await db.favorite.count({ where: { userId: user.id, productId: product.id } })) > 0 : false;
   const prices = product.variants.map((v) => effectivePriceCents(v));
   const appUrl = process.env.APP_URL ?? "";
@@ -50,6 +53,8 @@ export default async function ProductPage({ params }: Props) {
     description: product.shortDescription ?? product.description.slice(0, 300),
     image: product.images.map((i) => i.url),
     sku: product.variants[0]?.sku,
+    // Só declara nota ao Google quando há avaliações reais publicadas.
+    ...(reviews.count > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: reviews.average, reviewCount: reviews.count } } : {}),
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "BRL",
@@ -95,7 +100,7 @@ export default async function ProductPage({ params }: Props) {
         isLoggedIn={Boolean(user)}
       />
 
-      <div className="mt-20 grid gap-12 lg:grid-cols-5">
+      <div className="mt-20 grid grid-cols-1 gap-12 lg:grid-cols-5">
         <section className="lg:col-span-3" aria-labelledby="descricao">
           <h2 id="descricao" className="text-2xl font-semibold">
             Descrição
@@ -121,6 +126,8 @@ export default async function ProductPage({ params }: Props) {
           )}
         </section>
       </div>
+
+      <ProductReviews productId={product.id} slug={product.slug} reviews={reviews} eligibility={eligibility} />
 
       {related.length > 0 && (
         <div className="mt-20 border-t border-slate-100 pt-4">

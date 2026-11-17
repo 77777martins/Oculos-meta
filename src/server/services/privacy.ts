@@ -23,6 +23,7 @@ export async function exportUserData(userId: string) {
       lastLoginAt: true,
       addresses: { where: { deletedAt: null }, omit: { userId: true } },
       favorites: { select: { createdAt: true, product: { select: { name: true, slug: true } } } },
+      reviews: { select: { rating: true, comment: true, status: true, createdAt: true, product: { select: { name: true, slug: true } } } },
       consents: { select: { type: true, version: true, granted: true, createdAt: true } },
       orders: {
         select: {
@@ -63,6 +64,7 @@ export async function deleteAccount(userId: string, ip: string): Promise<void> {
     });
     await tx.address.deleteMany({ where: { userId } });
     await tx.favorite.deleteMany({ where: { userId } });
+    await tx.review.deleteMany({ where: { userId } });
     await tx.passwordResetToken.deleteMany({ where: { userId } });
     // Pedidos finalizados: mantém dados fiscais mínimos e remove contato/endereço completo.
     await tx.order.updateMany({ where: { userId }, data: { customerName: "Titular removido", customerEmail: anonymousEmail, customerPhone: null } });

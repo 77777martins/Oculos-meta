@@ -52,6 +52,7 @@ model User {
   addresses           Address[]
   orders              Order[]
   favorites           Favorite[]
+  reviews             Review[]
   couponRedemptions   CouponRedemption[]
   consents            ConsentRecord[]
   dataRequests        DataRequest[]
@@ -165,6 +166,7 @@ model Product {
   variants  ProductVariant[]
   images    ProductImage[]
   favorites Favorite[]
+  reviews   Review[]
 
   @@index([status, deletedAt])
   @@index([categoryId])
@@ -790,4 +792,31 @@ model RateLimitBucket {
   resetAt DateTime
 
   @@index([resetAt])
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+/// Avaliação de produto. Só clientes com pedido ENTREGUE do produto podem avaliar,
+/// e ela só aparece na vitrine depois de aprovada pela equipe.
+model Review {
+  id        String       @id @default(cuid())
+  productId String
+  userId    String
+  /// 1 a 5 (CHECK no banco).
+  rating    Int
+  comment   String       @db.VarChar(1000)
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId, status, createdAt])
+  @@index([status, createdAt])
 }

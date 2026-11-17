@@ -93,6 +93,8 @@ test("administrador acessa dashboard, pedidos e produtos", async ({ page }) => {
   await page.getByRole("link", { name: "Produtos e estoque" }).click();
   await expect(page.getByRole("heading", { name: "Produtos e estoque" })).toBeVisible();
   expect(errors).toEqual([]);
+  await page.goto("/admin/avaliacoes");
+  await expect(page.getByRole("heading", { name: "Avaliações de clientes" })).toBeVisible();
   await page.goto("/admin/lancamento");
   await expect(page.getByRole("heading", { name: "Pronto para vender" })).toBeVisible();
   await expect(page.getByRole("progressbar")).toBeVisible();

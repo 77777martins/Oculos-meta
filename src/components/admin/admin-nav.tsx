@@ -16,6 +16,7 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Star,
   Tag,
   Truck,
   UserCog,
@@ -34,6 +35,7 @@ const GROUPS: Array<{ title: string; items: Array<{ href: string; label: string;
       { href: "/admin/pagamentos", label: "Financeiro", icon: CreditCard, permission: "payments:read" },
       { href: "/admin/clientes", label: "Clientes", icon: Users, permission: "customers:read" },
       { href: "/admin/mensagens", label: "Mensagens", icon: Inbox, permission: "messages:read" },
+      { href: "/admin/avaliacoes", label: "Avaliações", icon: Star, permission: "products:write" },
     ],
   },
   {

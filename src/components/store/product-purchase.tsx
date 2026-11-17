@@ -85,7 +85,7 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
       {/* Galeria */}
       <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
         <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-white ring-1 ring-slate-200">
