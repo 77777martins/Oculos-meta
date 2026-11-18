@@ -31,7 +31,7 @@ describe("prevenção de mass assignment (schemas estritos)", () => {
     const r = checkoutSchema.safeParse({
       items: [{ variantId: "cl0000000000000000000000", quantity: 1, priceCents: 1 }],
       addressId: "cl0000000000000000000000",
-      shippingZoneId: "cl0000000000000000000000",
+      shippingOptionId: "zone_cl0000000000000000000000",
       customerDocument: "52998224725",
       customerPhone: "11999999999",
     });
@@ -43,7 +43,7 @@ describe("prevenção de mass assignment (schemas estritos)", () => {
 });
 
 describe("checkout", () => {
-  const base = { items: [{ variantId: "cl0000000000000000000000", quantity: 1 }], shippingZoneId: "cl0000000000000000000000", customerDocument: "52998224725", customerPhone: "(11) 99999-9999" };
+  const base = { items: [{ variantId: "cl0000000000000000000000", quantity: 1 }], shippingOptionId: "zone_cl0000000000000000000000", customerDocument: "52998224725", customerPhone: "(11) 99999-9999" };
   it("exige exatamente um tipo de endereço", () => {
     expect(checkoutSchema.safeParse(base).success).toBe(false);
     expect(checkoutSchema.safeParse({ ...base, addressId: "cl0000000000000000000000" }).success).toBe(true);

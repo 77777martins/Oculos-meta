@@ -12,6 +12,23 @@ export default async function globalSetup() {
   const db = new PrismaClient();
   try {
     await db.rateLimitBucket.deleteMany();
+    // Pedidos pendentes criados por execuções ANTERIORES dos E2E seguram estoque
+    // (localmente não há cron para expirá-los). Libera a reserva e expira-os,
+    // para cada execução começar do mesmo estado. Restrito aos e-mails de teste.
+    await db.$transaction(async (tx) => {
+      const stale = await tx.order.findMany({
+        where: { status: "PENDING_PAYMENT", customerEmail: { endsWith: "@example.com" } },
+        include: { items: true },
+      });
+      for (const order of stale) {
+        for (const item of order.items) {
+          if (!item.variantId) continue;
+          await tx.$executeRaw`UPDATE "ProductVariant" SET "reserved" = GREATEST("reserved" - ${item.quantity}, 0) WHERE "id" = ${item.variantId}`;
+        }
+        await tx.couponRedemption.deleteMany({ where: { orderId: order.id } });
+        await tx.order.update({ where: { id: order.id }, data: { status: "EXPIRED", reservationExpiresAt: null, cancelledAt: new Date() } });
+      }
+    });
   } finally {
     await db.$disconnect();
   }

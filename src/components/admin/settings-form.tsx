@@ -10,10 +10,11 @@ import { useToast } from "@/components/providers/toast";
 import { apiFetch } from "@/lib/http/client";
 import { settingsSchema } from "@/lib/validation/admin";
 import { Panel } from "./ui";
+import type { ReactNode } from "react";
 
 type Values = z.input<typeof settingsSchema>;
 
-export function SettingsForm({ initial }: { initial: Values }) {
+export function SettingsForm({ initial, integrationPanel }: { initial: Values; integrationPanel?: ReactNode }) {
   const toast = useToast();
   const router = useRouter();
   const form = useForm<Values>({ resolver: zodResolver(settingsSchema), defaultValues: initial });
@@ -56,6 +57,21 @@ export function SettingsForm({ initial }: { initial: Values }) {
             error={e.boletoDueDays?.message}
             hint="Entre 1 e 5. O estoque fica reservado até o vencimento + 3 dias (prazo de compensação bancária)."
           />
+        </div>
+      </Panel>
+      <Panel title="Frete — Melhor Envio">
+        {integrationPanel}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <Checkbox className="self-end sm:col-span-2" label="Usar cotação em tempo real do Melhor Envio (a tabela por CEP vira reserva)" {...r("melhorEnvioEnabled")} />
+          <Input label="CEP de origem dos envios" inputMode="numeric" maxLength={9} {...r("shippingOriginZip")} error={e.shippingOriginZip?.message} />
+          <div className="grid grid-cols-3 gap-2">
+            <Input label="Altura (cm)" type="number" {...r("packageHeightCm", { valueAsNumber: true })} error={e.packageHeightCm?.message} />
+            <Input label="Largura (cm)" type="number" {...r("packageWidthCm", { valueAsNumber: true })} error={e.packageWidthCm?.message} />
+            <Input label="Compr. (cm)" type="number" {...r("packageLengthCm", { valueAsNumber: true })} error={e.packageLengthCm?.message} />
+          </div>
+          <p className="text-xs text-slate-500 sm:col-span-2">
+            Dimensões da embalagem de UMA unidade; o peso vem de cada variante. Etiquetas são compradas no painel do Melhor Envio; ao informar o código de rastreio no pedido, o status é atualizado automaticamente.
+          </p>
         </div>
       </Panel>
       <Panel title="Textos institucionais e políticas">

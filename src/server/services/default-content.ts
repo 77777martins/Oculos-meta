@@ -8,7 +8,7 @@ Este texto é um modelo inicial. Substitua-o pela política revisada por sua ass
 
 ## Quais dados coletamos
 - Cadastro: nome, e-mail, senha (armazenada apenas como hash criptográfico) e telefone opcional.
-- Compras: CPF (exigido para nota fiscal e pelo processador de pagamentos), endereço de entrega e itens comprados.
+- Compras: CPF (exigido pelo processador de pagamentos e pelas transportadoras), endereço de entrega e itens comprados.
 - Segurança: registros técnicos mínimos, com endereço IP armazenado apenas de forma pseudonimizada.
 
 ## Para que usamos
@@ -24,7 +24,11 @@ Compartilhamos dados apenas com quem é necessário para concluir sua compra: pr
 Você pode, a qualquer momento, acessar e baixar seus dados, corrigi-los e solicitar a exclusão da conta pela área "Minha conta > Privacidade e dados".
 
 ## Retenção
-Dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal. Ao excluir a conta, dados pessoais não obrigatórios são removidos ou anonimizados.
+- Pedidos pagos: mantidos pelo prazo exigido pela legislação fiscal.
+- Pedidos nunca pagos (expirados ou cancelados): nome, CPF, contato e endereço são anonimizados após 180 dias.
+- Mensagens enviadas pelo formulário de contato: excluídas após 24 meses.
+- Registros de segurança (auditoria): mantidos por 5 anos.
+- Ao excluir a conta, dados pessoais não obrigatórios são removidos ou anonimizados imediatamente.
 
 ## Cookies
 Utilizamos cookies estritamente necessários (sessão e segurança). Cookies de análise só são utilizados com seu consentimento.`;
@@ -54,7 +58,7 @@ Compras realizadas pela internet podem ser canceladas em até 7 dias corridos ap
 Entre em contato pela página de Contato informando o número do pedido. Orientaremos sobre o envio do produto.
 
 ## Produtos com defeito
-Produtos com defeito seguem as regras de garantia legal e as condições de garantia do fabricante.
+Produtos com defeito contam com a garantia legal prevista no Código de Defesa do Consumidor (art. 26).
 
 ## Reembolso
 Após o recebimento e a conferência do produto, o reembolso é feito pelo mesmo meio de pagamento utilizado na compra.`;

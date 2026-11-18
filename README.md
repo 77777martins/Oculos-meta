@@ -1,4 +1,4 @@
-# Óculos Meta Store
+# Visio Store
 
 E-commerce completo de óculos inteligentes (Ray-Ban Meta e outros modelos): loja, carrinho, checkout, **pagamentos reais via Mercado Pago (PIX, cartão e boleto)**, área do cliente, painel administrativo, controle de estoque, LGPD e segurança alinhada à OWASP.
 
@@ -11,7 +11,8 @@ E-commerce completo de óculos inteligentes (Ray-Ban Meta e outros modelos): loj
 | Dados | PostgreSQL 16 · Prisma 6 (migrações versionadas + CHECK constraints) |
 | Autenticação | Sessões opacas no banco (cookie HttpOnly/Secure/SameSite) · Argon2id · RBAC |
 | Pagamentos | Mercado Pago (API de Pagamentos + Card Payment Brick + Webhooks assinados) |
-| Infra | Vercel (app + cron) · Vercel Blob (imagens) · Resend (e-mail) |
+| Frete | Melhor Envio (cotação real + rastreio automático, OAuth2) com tabela por CEP como reserva |
+| Infra | Vercel (app + cron) · Vercel Blob (imagens) · Resend (e-mail) · Sentry (erros) |
 | Testes | Vitest (unitários + integração com Postgres real) · Playwright (E2E) |
 
 ## Início rápido (desenvolvimento)

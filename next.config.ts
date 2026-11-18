@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -32,4 +33,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sem SENTRY_AUTH_TOKEN o build segue normalmente, apenas sem enviar source maps.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+});

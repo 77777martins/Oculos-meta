@@ -12,7 +12,7 @@ async function setup(stock = 10) {
 }
 
 const order = (userId: string, variantId: string, zoneId: string, quantity = 1, couponCode?: string) =>
-  createOrder({ userId, items: [{ variantId, quantity }], address: validAddress, shippingZoneId: zoneId, couponCode, customerDocument: VALID_CPF, customerPhone: "11999999999" });
+  createOrder({ userId, items: [{ variantId, quantity }], address: validAddress, shippingOptionId: `zone_${zoneId}`, couponCode, customerDocument: VALID_CPF, customerPhone: "11999999999" });
 
 describe("criação de pedido", () => {
   it("calcula valores no servidor (preço promocional + frete) e reserva estoque", async () => {

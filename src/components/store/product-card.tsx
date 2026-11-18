@@ -4,24 +4,19 @@ import type { ProductCardData } from "@/server/services/catalog";
 import { Badge } from "@/components/ui/badge";
 import { Price } from "@/components/ui/price";
 import { GlassesArt } from "@/components/ui/glasses-art";
+import { LensPhoto, isBundledImage } from "@/components/ui/lens-photo";
+import { cn } from "@/lib/utils";
 
 export function ProductCard({ product, priority }: { product: ProductCardData; priority?: boolean }) {
   return (
     <article className="group relative">
       <Link href={`/produtos/${product.slug}`} className="block" aria-label={`${product.name} — ver detalhes`}>
-        <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 via-white to-brand-50 ring-1 ring-slate-100 transition-all duration-500 group-hover:shadow-lift group-hover:ring-brand-100">
+        <div className="relative aspect-[4/5] overflow-hidden bg-slate-50 transition-colors duration-500 group-hover:bg-slate-100">
           {product.image ? (
             <>
-              <Image
-                src={product.image.url}
-                alt={product.image.alt}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover transition-all duration-700 group-hover:scale-[1.04]"
-                priority={priority}
-              />
-              {product.hoverImage && (
-                <Image src={product.hoverImage.url} alt="" fill sizes="25vw" className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
+<LensPhoto src={product.image.url} sunSrc={product.image.sunUrl} alt={product.image.alt} sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" priority={priority} className={cn("p-4 transition-all duration-500", product.hoverImage && !product.image.sunUrl ? "group-hover:opacity-0" : "group-hover:scale-[1.04]")} />
+              {product.hoverImage && !product.image.sunUrl && (
+                <Image src={product.hoverImage.url} alt="" fill sizes="25vw" unoptimized={isBundledImage(product.hoverImage.url)} className="object-contain p-4 opacity-0 mix-blend-multiply transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
               )}
             </>
           ) : (
@@ -36,7 +31,7 @@ export function ProductCard({ product, priority }: { product: ProductCardData; p
         </div>
         <div className="mt-4 space-y-1 px-1">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{product.brand}</p>
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink group-hover:text-brand-700">{product.name}</h3>
+          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink underline-offset-4 group-hover:underline">{product.name}</h3>
           {product.colors.length > 0 && (
             <div className="flex items-center gap-1.5 pt-1" aria-label={`${product.colors.length} cores disponíveis`}>
               {product.colors.map((c, i) => (

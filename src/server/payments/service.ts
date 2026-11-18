@@ -10,7 +10,7 @@ import { returnToStock } from "@/server/services/inventory";
 import { markOrderPaid, type ShippingAddressSnapshot } from "@/server/services/orders";
 import { canTransition, mapMercadoPagoStatus } from "@/server/services/order-state";
 import { getStoreSettings } from "@/server/services/settings";
-import { orderPaidEmail, sendMail } from "@/server/services/mail";
+import { notifyOrder } from "@/server/services/notifications";
 import { PaymentProviderError, type PayerInfo, type ProviderPayment } from "./gateway";
 import { getPaymentGateway } from "./mercadopago";
 
@@ -346,6 +346,7 @@ export async function applyProviderPayment(
   }
   const paymentId = found.id;
   let becamePaid = false;
+  let becameRefunded = false;
 
   const result = await db.$transaction(
     async (tx) => {
@@ -405,6 +406,7 @@ export async function applyProviderPayment(
 
       if (statusChanged && (nextStatus === "REFUNDED" || nextStatus === "CHARGED_BACK")) {
         await applyFullRefundToOrder(tx, order.id, nextStatus === "CHARGED_BACK" ? "Chargeback registrado pelo provedor" : "Pagamento reembolsado");
+        becameRefunded = nextStatus === "REFUNDED";
       }
 
       await recordEvent({ ...meta, type: "payment.status", provider, paymentId: payment.id, tx });
@@ -414,10 +416,12 @@ export async function applyProviderPayment(
   );
 
   logger.info("payment.applied", { paymentId: result.payment.id, status: result.payment.status, source: meta.source });
+  // Após a transação: e-mails aguardados (na Vercel a função congela após a resposta).
   if (becamePaid) {
     await cancelOtherPendingPayments(result.payment.orderId, result.payment.id);
-    void notifyOrderPaid(result.payment.orderId);
+    await notifyOrder(result.payment.orderId, "PAID");
   }
+  if (becameRefunded) await notifyOrder(result.payment.orderId, "REFUNDED", { refundCents: result.payment.refundedCents || result.payment.amountCents });
   return result.payment;
 }
 
@@ -438,16 +442,6 @@ async function cancelOtherPendingPayments(orderId: string, approvedPaymentId: st
     } catch (error) {
       logger.warn("payment.cancel_other_failed", { orderId, paymentId: p.id, error });
     }
-  }
-}
-
-/** E-mail de confirmação — fora da transação: falha de e-mail nunca desfaz o pagamento. */
-async function notifyOrderPaid(orderId: string): Promise<void> {
-  try {
-    const order = await db.order.findUniqueOrThrow({ where: { id: orderId }, select: { id: true, number: true, customerName: true, customerEmail: true } });
-    await sendMail({ to: order.customerEmail, ...orderPaidEmail(order.customerName, order.number, `${env().APP_URL}/conta/pedidos/${order.id}`) });
-  } catch (error) {
-    logger.error("payment.notify_failed", { orderId, error });
   }
 }
 
@@ -527,7 +521,7 @@ export async function refundPayment(input: { paymentId: string; amountCents?: nu
     toAppError(error);
   }
 
-  await db.$transaction(async (tx) => {
+  const refundApproved = await db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT "id" FROM "Payment" WHERE "id" = ${payment.id} FOR UPDATE`;
     const current = await tx.payment.findUniqueOrThrow({ where: { id: payment.id } });
     const approved = providerRefund.status === "approved";
@@ -546,8 +540,10 @@ export async function refundPayment(input: { paymentId: string; amountCents?: nu
       }
     }
     await audit({ actorId: input.actorId, action: "payment.refund", entityType: "Payment", entityId: payment.id, metadata: { amountCents: amount, status: providerRefund.status }, ip: input.ip }, tx);
+    return approved;
   });
 
+  if (refundApproved) await notifyOrder(payment.orderId, "REFUNDED", { refundCents: amount });
   return { refundId: refundRow.id, status: providerRefund.status };
 }
 

@@ -1,106 +1,97 @@
 import Link from "next/link";
-import { CreditCard, Lock, QrCode, Truck } from "lucide-react";
 import { getStoreSettings } from "@/server/services/settings";
+import { getNavigation } from "@/server/services/navigation";
 import { Logo } from "./logo";
+import { HELP_LINKS, type NavLink } from "./nav-links";
 
 export async function Footer() {
-  const s = await getStoreSettings();
+  const [s, navigation] = await Promise.all([getStoreSettings(), getNavigation()]);
   const year = new Date().getFullYear();
+
+  const columns: Array<{ title: string; links: NavLink[] }> = [
+    {
+      title: "Conheça a loja",
+      links: [
+        ["/sobre", "Quem somos"],
+        ["/creditos-imagens", "Créditos das imagens"],
+        ["/politica-de-privacidade", "Política de privacidade"],
+        ["/termos-de-uso", "Termos de uso"],
+      ],
+    },
+    {
+      title: "Compre com a gente",
+      links: [...navigation.map((c): NavLink => [`/categorias/${c.slug}`, c.name]), ["/produtos", "Todos os modelos"], ["/produtos?ordem=novidades", "Novidades"]],
+    },
+    {
+      title: "Sua conta",
+      links: [
+        ["/conta", "Minha conta"],
+        ["/conta/pedidos", "Meus pedidos"],
+        ["/conta/favoritos", "Favoritos"],
+        ["/conta/privacidade", "Privacidade e dados"],
+      ],
+    },
+    { title: "Ajuda", links: HELP_LINKS },
+  ];
+
+  const payments = ["PIX", "Cartão de crédito", ...(s.boletoEnabled ? ["Boleto"] : [])];
+  const contact = [s.contactEmail, s.contactPhone, s.businessHours].filter((v): v is string => !!v);
+
   return (
-    <footer className="mt-24 bg-ink text-slate-300">
-      <div className="border-b border-white/10">
-        <div className="container-page grid grid-cols-2 gap-6 py-10 md:grid-cols-4">
-          {[
-            { icon: QrCode, title: "PIX instantâneo", text: "Aprovação em segundos" },
-            { icon: CreditCard, title: "Cartão de crédito", text: `Em até ${s.maxInstallments}x pelo Mercado Pago` },
-            { icon: Truck, title: "Entrega rastreada", text: "Acompanhe cada etapa" },
-            { icon: Lock, title: "Compra segura", text: "Dados protegidos" },
-          ].map(({ icon: Icon, title, text }) => (
-            <div key={title} className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-brand-300">
-                <Icon className="size-5" aria-hidden />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-white">{title}</p>
-                <p className="text-xs text-slate-400">{text}</p>
-              </div>
+    <footer className="text-white">
+      {/* Âncora nativa: funciona sem JavaScript e respeita "reduzir movimento". */}
+      <a href="#topo" className="block bg-[#26314f] py-4 text-center text-sm font-medium hover:bg-[#2f3b5c]">
+        Voltar ao início
+      </a>
+
+      <div className="bg-ink-soft">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-x-8 gap-y-10 px-6 py-12 lg:grid-cols-4">
+          {columns.map((col) => (
+            <div key={col.title}>
+              <p className="font-bold">{col.title}</p>
+              <ul className="mt-3 space-y-2 text-sm">
+                {col.links.map(([href, label]) => (
+                  <li key={href}>
+                    <Link href={href} className="text-white/75 hover:text-white hover:underline">
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="container-page grid gap-10 py-14 md:grid-cols-12">
-        <div className="md:col-span-4">
-          <Logo inverted name={s.storeName} />
-          <p className="mt-4 max-w-xs text-sm leading-6 text-slate-400">Óculos inteligentes com curadoria, procedência e atendimento especializado.</p>
+      <div className="border-t border-white/10 bg-ink-soft">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-5 px-6 py-8 text-center">
+          <Logo name={s.storeName} inverted />
+          <div className="flex flex-wrap items-center justify-center gap-2" aria-label="Formas de pagamento">
+            {payments.map((p) => (
+              <span key={p} className="rounded border border-white/25 px-2.5 py-1 text-xs text-white/85">
+                {p}
+              </span>
+            ))}
+            <span className="text-xs text-white/60">via Mercado Pago</span>
+          </div>
+          {contact.length > 0 && <p className="text-sm text-white/70">{contact.join(" · ")}</p>}
           {s.instagramUrl && (
-            <a href={s.instagramUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block text-sm text-brand-300 hover:text-white">
+            <a href={s.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-white/80 hover:text-white hover:underline">
               Instagram
             </a>
           )}
         </div>
-        <FooterCol
-          title="Loja"
-          links={[
-            ["/produtos", "Todos os modelos"],
-            ["/busca", "Buscar"],
-            ["/carrinho", "Carrinho"],
-            ["/conta/favoritos", "Favoritos"],
-          ]}
-        />
-        <FooterCol
-          title="Ajuda"
-          links={[
-            ["/faq", "Perguntas frequentes"],
-            ["/contato", "Fale conosco"],
-            ["/conta/pedidos", "Rastrear pedido"],
-            ["/trocas-e-devolucoes", "Trocas e devoluções"],
-          ]}
-        />
-        <FooterCol
-          title="Institucional"
-          links={[
-            ["/sobre", "Sobre nós"],
-            ["/politica-de-privacidade", "Privacidade"],
-            ["/termos-de-uso", "Termos de uso"],
-          ]}
-        />
-        <div className="md:col-span-2">
-          <p className="text-sm font-semibold text-white">Atendimento</p>
-          <ul className="mt-4 space-y-2 text-sm text-slate-400">
-            {s.contactEmail && <li>{s.contactEmail}</li>}
-            {s.contactPhone && <li>{s.contactPhone}</li>}
-            {s.businessHours && <li>{s.businessHours}</li>}
-          </ul>
-        </div>
       </div>
 
-      <div className="border-t border-white/10">
-        <div className="container-page flex flex-col gap-2 py-6 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
+      <div className="bg-ink">
+        <div className="mx-auto max-w-5xl space-y-1 px-6 py-6 text-center text-xs text-white/60">
           <p>
             © {year} {s.legalName ?? s.storeName}
             {s.cnpj ? ` — CNPJ ${s.cnpj}` : ""}. Todos os direitos reservados.
           </p>
-          <p>Ray-Ban® e Meta® são marcas de seus respectivos titulares. Loja independente.</p>
+          <p>Ray-Ban®, Oakley® e Meta® são marcas de seus respectivos titulares. Loja independente, sem vínculo com os fabricantes.</p>
         </div>
       </div>
     </footer>
-  );
-}
-
-function FooterCol({ title, links }: { title: string; links: Array<[string, string]> }) {
-  return (
-    <div className="md:col-span-2">
-      <p className="text-sm font-semibold text-white">{title}</p>
-      <ul className="mt-4 space-y-2.5 text-sm">
-        {links.map(([href, label]) => (
-          <li key={href}>
-            <Link href={href} className="text-slate-400 transition-colors hover:text-white">
-              {label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

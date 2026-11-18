@@ -5,6 +5,7 @@ import { ConflictError } from "@/lib/errors";
 import { hashPassword } from "@/lib/auth/password";
 import { revokeAllUserSessions } from "@/lib/auth/session";
 import { audit } from "./audit";
+import { getStoreSettings } from "./settings";
 
 /**
  * LGPD — direito de acesso (art. 18, II): exporta os dados pessoais do titular.
@@ -22,6 +23,7 @@ export async function exportUserData(userId: string) {
       lastLoginAt: true,
       addresses: { where: { deletedAt: null }, omit: { userId: true } },
       favorites: { select: { createdAt: true, product: { select: { name: true, slug: true } } } },
+      reviews: { select: { rating: true, comment: true, status: true, createdAt: true, product: { select: { name: true, slug: true } } } },
       consents: { select: { type: true, version: true, granted: true, createdAt: true } },
       orders: {
         select: {
@@ -39,7 +41,8 @@ export async function exportUserData(userId: string) {
     },
   });
   await db.dataRequest.create({ data: { userId, type: "ACCESS", status: "COMPLETED", completedAt: new Date(), notes: "Exportação automática pelo titular" } });
-  return { generatedAt: new Date().toISOString(), controller: "Óculos Meta Store", data: user };
+  const settings = await getStoreSettings();
+  return { generatedAt: new Date().toISOString(), controller: settings.legalName ?? settings.storeName, data: user };
 }
 
 /**
@@ -61,6 +64,7 @@ export async function deleteAccount(userId: string, ip: string): Promise<void> {
     });
     await tx.address.deleteMany({ where: { userId } });
     await tx.favorite.deleteMany({ where: { userId } });
+    await tx.review.deleteMany({ where: { userId } });
     await tx.passwordResetToken.deleteMany({ where: { userId } });
     // Pedidos finalizados: mantém dados fiscais mínimos e remove contato/endereço completo.
     await tx.order.updateMany({ where: { userId }, data: { customerName: "Titular removido", customerEmail: anonymousEmail, customerPhone: null } });

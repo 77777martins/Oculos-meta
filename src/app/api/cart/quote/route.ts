@@ -30,7 +30,13 @@ export const POST = apiHandler(async (req) => {
     else couponMessage = check.evaluation.reason;
   }
 
-  const shippingOptions = input.zipCode ? await getShippingOptions(input.zipCode, subtotalCents) : [];
+  const shippingOptions = input.zipCode
+    ? await getShippingOptions({
+        zipCode: input.zipCode,
+        subtotalCents,
+        lines: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity, unitPriceCents: l.unitPriceCents, weightGrams: l.weightGrams })),
+      })
+    : [];
   const cheapest = shippingOptions[0];
   const totals = computeTotals({
     lines: lines.filter((l) => l.quantity > 0).map((l) => ({ variantId: l.variantId, quantity: l.quantity, unitPriceCents: l.unitPriceCents })),

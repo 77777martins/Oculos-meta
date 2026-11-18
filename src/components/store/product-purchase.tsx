@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { Check, Minus, Plus, ShoppingBag, Truck } from "lucide-react";
+import { LensPhoto, isBundledImage } from "@/components/ui/lens-photo";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Minus, Plus, RotateCcw, ShieldCheck, ShoppingBag, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { GlassesArt } from "@/components/ui/glasses-art";
@@ -12,6 +14,7 @@ import { effectivePriceCents, formatBRL } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { MAX_QTY_PER_ITEM } from "@/lib/validation/checkout";
 import { FavoriteButton } from "./favorite-button";
+import { ShippingEstimate } from "./shipping-estimate";
 
 interface Variant {
   id: string;
@@ -29,7 +32,7 @@ interface Variant {
 interface Props {
   product: { id: string; name: string; brand: string; model: string; shortDescription: string | null };
   variants: Variant[];
-  images: Array<{ id: string; url: string; alt: string; variantId: string | null }>;
+  images: Array<{ id: string; url: string; alt: string; variantId: string | null; credit?: string | null; creditUrl?: string | null; sunUrl?: string | null }>;
   maxInstallments: number;
   isFavorite: boolean;
   isLoggedIn: boolean;
@@ -37,13 +40,29 @@ interface Props {
 
 export function ProductPurchase({ product, variants, images, maxInstallments, isFavorite, isLoggedIn }: Props) {
   const toast = useToast();
+  const router = useRouter();
+  // Barra de compra fixa no celular: aparece quando o botão principal sai da tela.
+  const buyRef = useRef<HTMLDivElement>(null);
+  const [showBar, setShowBar] = useState(false);
+  useEffect(() => {
+    const el = buyRef.current;
+    if (!el) return;
+    // A margem inferior enorme faz o botão contar como "visível" enquanto estiver na tela ou abaixo dela:
+    // só deixa de cruzar quando fica ACIMA. Sem isso, um salto direto do topo para o fim da página
+    // (âncora, "voltar") não muda o estado de interseção e a barra não apareceria.
+    const observer = new IntersectionObserver(([entry]) => setShowBar(!!entry && !entry.isIntersecting), { rootMargin: "0px 0px 100000px 0px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const [variantId, setVariantId] = useState(() => (variants.find((v) => v.available > 0) ?? variants[0])?.id);
   const [qty, setQty] = useState(1);
   const variant = variants.find((v) => v.id === variantId) ?? variants[0];
 
   const gallery = useMemo(() => {
+    // Só fotos desta variante + fotos gerais: nunca mostra a foto de OUTRA cor/variante.
     const specific = images.filter((i) => i.variantId === variantId);
-    return specific.length > 0 ? [...specific, ...images.filter((i) => !i.variantId)] : images;
+    const general = images.filter((i) => !i.variantId);
+    return [...specific, ...general];
   }, [images, variantId]);
   const [activeImage, setActiveImage] = useState(0);
   const current = gallery[Math.min(activeImage, gallery.length - 1)];
@@ -54,29 +73,48 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
   const maxQty = Math.min(MAX_QTY_PER_ITEM, variant.available);
   const installments = Math.max(1, Math.min(maxInstallments, Math.floor(price / 5000)));
 
-  function addToCart() {
+  function addToCart(goToCart = false) {
     if (!variant || soldOut) return;
     const ok = cart.add(variant.id, qty);
     if (!ok) {
       toast.error("Carrinho cheio", "Remova itens antes de adicionar novos produtos.");
       return;
     }
-    toast.success("Adicionado ao carrinho", `${product.name} — ${variant.name}`, { label: "Ver carrinho", href: "/carrinho" });
+    if (goToCart) router.push("/carrinho");
+    else toast.success("Adicionado ao carrinho", `${product.name} — ${variant.name}`, { label: "Ver carrinho", href: "/carrinho" });
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
       {/* Galeria */}
-      <div className="lg:sticky lg:top-24 lg:self-start">
-        <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-50 via-white to-brand-50 ring-1 ring-slate-100">
+      <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+        <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-white ring-1 ring-slate-200">
           {current ? (
-            <Image key={current.id} src={current.url} alt={current.alt} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="animate-fade-up object-cover" />
+            <div key={current.id} className="absolute inset-0 animate-fade-up">
+              <LensPhoto src={current.url} sunSrc={current.sunUrl} alt={current.alt} sizes="(max-width: 1024px) 100vw, 50vw" priority className="p-6" />
+            </div>
           ) : (
             <div className="flex h-full items-center justify-center p-12">
               <GlassesArt />
             </div>
           )}
         </div>
+        {current?.sunUrl && (
+          <p className="mt-2 flex items-center gap-1.5 px-2 text-xs text-slate-600">
+            <Sun className="size-3.5 text-amber-500" aria-hidden /> Lente que escurece no sol — animação ilustrativa do efeito.
+          </p>
+        )}
+        {current?.credit && (
+          <p className="mt-2 text-right text-[11px] text-slate-500">
+            {current.creditUrl ? (
+              <a href={current.creditUrl} target="_blank" rel="noopener noreferrer" className="hover:text-ink hover:underline">
+                {current.credit}
+              </a>
+            ) : (
+              current.credit
+            )}
+          </p>
+        )}
         {gallery.length > 1 && (
           <div className="mt-4 flex gap-3 overflow-x-auto pb-1" role="tablist" aria-label="Imagens do produto">
             {gallery.map((img, i) => (
@@ -89,7 +127,7 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
                 onClick={() => setActiveImage(i)}
                 className={cn("relative size-20 shrink-0 overflow-hidden rounded-2xl ring-2 transition-all", i === activeImage ? "ring-brand-600" : "ring-transparent opacity-70 hover:opacity-100")}
               >
-                <Image src={img.url} alt="" fill sizes="80px" className="object-cover" />
+                <Image src={img.url} alt="" fill sizes="80px" unoptimized={isBundledImage(img.url)} className="object-cover" />
               </button>
             ))}
           </div>
@@ -121,7 +159,7 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
         {variants.length > 1 && (
           <fieldset className="mt-8">
             <legend className="text-sm font-semibold">
-              Variante: <span className="font-normal text-slate-600">{variant.name}</span>
+              Cor: <span className="font-normal text-slate-600">{variant.name}</span>
             </legend>
             <div className="mt-3 flex flex-wrap gap-2">
               {variants.map((v) => (
@@ -155,7 +193,7 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
           </fieldset>
         )}
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        <div ref={buyRef} className="mt-8 flex flex-wrap items-center gap-3">
           <div className="flex h-13 items-center rounded-full border border-slate-200" role="group" aria-label="Quantidade">
             <button type="button" className="flex size-12 items-center justify-center rounded-full text-slate-700 hover:bg-slate-50 disabled:opacity-40" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1 || soldOut} aria-label="Diminuir quantidade">
               <Minus className="size-4" />
@@ -167,10 +205,15 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
               <Plus className="size-4" />
             </button>
           </div>
-          <Button size="lg" className="flex-1" onClick={addToCart} disabled={soldOut} icon={<ShoppingBag className="size-5" />}>
+          <Button size="lg" className="flex-1" onClick={() => addToCart()} disabled={soldOut} icon={<ShoppingBag className="size-5" />}>
             {soldOut ? "Esgotado" : "Adicionar ao carrinho"}
           </Button>
         </div>
+        {!soldOut && (
+          <Button size="lg" variant="dark" className="mt-3 w-full" onClick={() => addToCart(true)}>
+            Comprar agora
+          </Button>
+        )}
 
         <ul className="mt-6 space-y-2 text-sm text-slate-600">
           <li className="flex items-center gap-2">
@@ -184,11 +227,27 @@ export function ProductPurchase({ product, variants, images, maxInstallments, is
             )}
           </li>
           <li className="flex items-center gap-2">
-            <Truck className="size-4 text-brand-600" aria-hidden /> Calcule o frete no carrinho
+            <RotateCcw className="size-4 text-brand-600" aria-hidden /> 7 dias para desistir da compra após o recebimento
+          </li>
+          <li className="flex items-center gap-2">
+            <ShieldCheck className="size-4 text-brand-600" aria-hidden /> Pagamento processado pelo Mercado Pago
           </li>
         </ul>
+        <ShippingEstimate variantId={variant.id} quantity={qty} />
         <p className="mt-6 text-xs text-slate-500">*Parcelamento sujeito às condições do Mercado Pago no momento do pagamento.</p>
       </div>
+
+      {showBar && !soldOut && (
+        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(10_15_30/0.25)] lg:hidden">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs text-slate-500">{variant.name}</p>
+            <p className="font-semibold">{formatBRL(price)}</p>
+          </div>
+          <Button onClick={() => addToCart()} icon={<ShoppingBag className="size-4" />}>
+            Adicionar
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

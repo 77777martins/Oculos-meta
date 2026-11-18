@@ -1,5 +1,5 @@
 // =============================================================================
-// Oculos Meta Store — modelo de dados
+// Visio Store — modelo de dados
 // -----------------------------------------------------------------------------
 // Convenções:
 // - Valores monetários SEMPRE em centavos inteiros (sufixo `Cents`).
@@ -52,6 +52,7 @@ model User {
   addresses           Address[]
   orders              Order[]
   favorites           Favorite[]
+  reviews             Review[]
   couponRedemptions   CouponRedemption[]
   consents            ConsentRecord[]
   dataRequests        DataRequest[]
@@ -165,6 +166,7 @@ model Product {
   variants  ProductVariant[]
   images    ProductImage[]
   favorites Favorite[]
+  reviews   Review[]
 
   @@index([status, deletedAt])
   @@index([categoryId])
@@ -209,6 +211,13 @@ model ProductImage {
   alt       String   @db.VarChar(200)
   width     Int?
   height    Int?
+  /// Crédito exigido por licenças livres (ex.: "Foto: Autor / Wikimedia Commons — CC BY 4.0").
+  credit    String?  @db.VarChar(300)
+  /// Página de origem da imagem (autor e licença completos).
+  creditUrl String?  @db.VarChar(1024)
+  /// Mesma foto (mesmo enquadramento) com a lente escurecida. Quando preenchida, a vitrine
+  /// alterna sozinha entre as duas para mostrar lentes que escurecem no sol.
+  sunUrl    String?  @db.VarChar(1024)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 
@@ -375,6 +384,12 @@ model Order {
   shippingService      String?     @db.VarChar(60)
   shippingMinDays      Int?
   shippingMaxDays      Int?
+  /// "TABLE" (tabela por CEP) ou "MELHOR_ENVIO".
+  shippingProvider     String?     @db.VarChar(20)
+  /// ID do serviço no Melhor Envio (ex.: 1 = PAC).
+  shippingServiceId    Int?
+  /// Cotação salva no checkout (recomendação do Melhor Envio para a compra da etiqueta).
+  shippingQuote        Json?
 
   /// Até quando o estoque fica reservado aguardando pagamento.
   reservationExpiresAt DateTime?
@@ -566,6 +581,11 @@ model Shipment {
   trackingCode String?        @db.VarChar(60)
   trackingUrl  String?        @db.VarChar(1024)
   status       ShipmentStatus @default(PENDING)
+  /// ID da etiqueta no Melhor Envio (localizada pelo código de rastreio).
+  providerOrderId String?     @db.VarChar(64)
+  /// Último status bruto recebido do provedor logístico.
+  providerStatus  String?     @db.VarChar(30)
+  lastSyncedAt    DateTime?
   shippedAt    DateTime?
   deliveredAt  DateTime?
   createdAt    DateTime       @default(now())
@@ -575,6 +595,7 @@ model Shipment {
   events ShipmentEvent[]
 
   @@index([trackingCode])
+  @@index([status, lastSyncedAt], map: "Shipment_sync_idx")
 }
 
 /// Movimentação registrada pela equipe com base na transportadora (nunca simulada).
@@ -630,7 +651,7 @@ model MediaAsset {
 /// Configuração única da loja (linha com id = "default").
 model StoreSettings {
   id                     String   @id @default("default")
-  storeName              String   @default("Óculos Meta Store") @db.VarChar(80)
+  storeName              String   @default("Visio Store") @db.VarChar(80)
   legalName              String?  @db.VarChar(160)
   cnpj                   String?  @db.VarChar(18)
   contactEmail           String?  @db.VarChar(254)
@@ -650,6 +671,14 @@ model StoreSettings {
   boletoEnabled          Boolean  @default(false)
   /// Dias corridos até o vencimento do boleto.
   boletoDueDays          Int      @default(2)
+  /// Cotação de frete em tempo real via Melhor Envio (requer conexão OAuth no painel).
+  melhorEnvioEnabled     Boolean  @default(false)
+  /// CEP de origem dos envios (8 dígitos).
+  shippingOriginZip      String?  @db.Char(8)
+  /// Dimensões da embalagem por unidade, em centímetros.
+  packageHeightCm        Int      @default(8)
+  packageWidthCm         Int      @default(16)
+  packageLengthCm        Int      @default(20)
   updatedAt              DateTime @updatedAt
 }
 
@@ -735,6 +764,24 @@ model DataRequest {
 }
 
 // -----------------------------------------------------------------------------
+// Integrações externas
+// -----------------------------------------------------------------------------
+
+/// Credenciais OAuth de integrações (tokens CRIPTOGRAFADOS com AES-256-GCM).
+model IntegrationCredential {
+  id                String    @id @default(cuid())
+  provider          String    @unique @db.VarChar(40)
+  environment       String    @db.VarChar(20)
+  accessTokenEnc    String    @db.Text
+  refreshTokenEnc   String    @db.Text
+  expiresAt         DateTime
+  scope             String?   @db.VarChar(500)
+  connectedById     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// -----------------------------------------------------------------------------
 // Infraestrutura
 // -----------------------------------------------------------------------------
 
@@ -745,4 +792,31 @@ model RateLimitBucket {
   resetAt DateTime
 
   @@index([resetAt])
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+/// Avaliação de produto. Só clientes com pedido ENTREGUE do produto podem avaliar,
+/// e ela só aparece na vitrine depois de aprovada pela equipe.
+model Review {
+  id        String       @id @default(cuid())
+  productId String
+  userId    String
+  /// 1 a 5 (CHECK no banco).
+  rating    Int
+  comment   String       @db.VarChar(1000)
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId, status, createdAt])
+  @@index([status, createdAt])
 }

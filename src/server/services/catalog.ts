@@ -12,7 +12,7 @@ const publicWhere: Prisma.ProductWhereInput = {
 };
 
 const cardInclude = {
-  images: { orderBy: { sortOrder: "asc" }, take: 2, select: { url: true, alt: true } },
+  images: { orderBy: { sortOrder: "asc" }, take: 2, select: { url: true, alt: true, sunUrl: true } },
   variants: {
     where: { isActive: true },
     orderBy: { sortOrder: "asc" },
@@ -30,7 +30,9 @@ export interface ProductCardData {
   model: string;
   brand: string;
   category: string | null;
-  image: { url: string; alt: string } | null;
+  categorySlug: string | null;
+  /** `sunUrl`: mesma foto com a lente escurecida (efeito automático). */
+  image: { url: string; alt: string; sunUrl: string | null } | null;
   hoverImage: { url: string; alt: string } | null;
   priceCents: number;
   listPriceCents: number;
@@ -48,6 +50,7 @@ function toCard(p: CardProduct): ProductCardData {
     model: p.model,
     brand: p.brand,
     category: p.category?.name ?? null,
+    categorySlug: p.category?.slug ?? null,
     image: p.images[0] ?? null,
     hoverImage: p.images[1] ?? null,
     priceCents: cheapest ? effectivePriceCents(cheapest) : 0,
@@ -122,7 +125,7 @@ export const getProductBySlug = cache(async (slug: string) => {
     where: { slug, ...publicWhere },
     include: {
       category: { select: { name: true, slug: true } },
-      images: { orderBy: { sortOrder: "asc" }, select: { id: true, url: true, alt: true, variantId: true, width: true, height: true } },
+      images: { orderBy: { sortOrder: "asc" }, select: { id: true, url: true, alt: true, variantId: true, width: true, height: true, credit: true, creditUrl: true, sunUrl: true } },
       variants: {
         where: { isActive: true },
         orderBy: { sortOrder: "asc" },
@@ -170,6 +173,15 @@ export async function getFavoriteProducts(userId: string) {
     orderBy: { createdAt: "desc" },
   });
   return favorites.map((f) => toCard(f.product));
+}
+
+/** Todas as imagens com crédito (página pública de atribuições). */
+export async function getImageCredits() {
+  return db.productImage.findMany({
+    where: { credit: { not: null }, product: { ...publicWhere } },
+    orderBy: [{ productId: "asc" }, { sortOrder: "asc" }],
+    select: { id: true, url: true, alt: true, credit: true, creditUrl: true, product: { select: { name: true, slug: true } } },
+  });
 }
 
 export async function getSitemapEntries() {

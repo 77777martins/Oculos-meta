@@ -9,7 +9,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ProductImage } from "@/components/ui/product-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBRL } from "@/lib/money";
-import { onlyDigits } from "@/lib/utils";
+import { formatZip, onlyDigits } from "@/lib/utils";
+import { setDeliveryZip, useDeliveryZip } from "@/components/providers/delivery-zip";
 import { OrderSummary } from "./order-summary";
 import { useCartQuote } from "./use-cart-quote";
 
@@ -17,8 +18,10 @@ export const CHECKOUT_COUPON_KEY = "oms_checkout_coupon";
 
 export function CartView() {
   const items = useCartItems();
-  const [zipInput, setZipInput] = useState("");
-  const [zip, setZip] = useState<string | undefined>();
+  // CEP salvo no cabeçalho ("Enviar para") já calcula o frete; editar aqui também o atualiza.
+  const savedZip = useDeliveryZip();
+  const [zipInput, setZipInput] = useState<string | null>(null);
+  const zip = savedZip ?? undefined;
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<string | undefined>();
   const { quote, loading, error } = useCartQuote(items, zip, coupon);
@@ -126,15 +129,14 @@ export function CartView() {
             className="rounded-3xl border border-slate-100 p-5"
             onSubmit={(e) => {
               e.preventDefault();
-              const d = onlyDigits(zipInput);
-              if (d.length === 8) setZip(d);
+              setDeliveryZip(onlyDigits(zipInput ?? ""));
             }}
           >
             <label htmlFor="cep" className="flex items-center gap-2 text-sm font-semibold">
               <Truck className="size-4 text-brand-600" aria-hidden /> Calcular frete
             </label>
             <div className="mt-3 flex gap-2">
-              <input id="cep" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000" maxLength={9} value={zipInput} onChange={(e) => setZipInput(e.target.value)} className="h-11 w-full rounded-full border border-slate-200 px-4 text-sm focus:border-brand-500 focus:outline-none" />
+              <input id="cep" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000" maxLength={9} value={zipInput ?? (savedZip ? formatZip(savedZip) : "")} onChange={(e) => setZipInput(e.target.value)} className="h-11 w-full rounded-full border border-slate-200 px-4 text-sm focus:border-brand-500 focus:outline-none" />
               <Button type="submit" variant="dark" size="md">
                 OK
               </Button>

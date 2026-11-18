@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { AlertTriangle } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
 
 /** Página 500: mensagem amigável, sem detalhes técnicos (o digest ajuda o suporte a localizar o log). */
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error("[ui-error]", error.digest);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

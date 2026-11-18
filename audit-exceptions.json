@@ -1,0 +1,4 @@
+{
+  "$comment": "Exceções TEMPORÁRIAS da auditoria de dependências (npm audit). Cada uma exige justificativa e data de validade; vencida, o CI volta a falhar. Remova a entrada assim que existir correção.",
+  "exceptions": []
+}

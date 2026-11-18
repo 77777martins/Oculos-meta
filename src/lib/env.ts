@@ -26,8 +26,15 @@ const schema = z.object({
   MERCADOPAGO_STATEMENT_DESCRIPTOR: z.string().max(13).default("OCULOSMETA"),
   NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY: optional,
   RESEND_API_KEY: optional,
-  EMAIL_FROM: z.string().default("Óculos Meta Store <nao-responda@localhost>"),
+  EMAIL_FROM: z.string().default("Visio Store <nao-responda@localhost>"),
   BLOB_READ_WRITE_TOKEN: optional,
+  MELHORENVIO_CLIENT_ID: optional,
+  MELHORENVIO_CLIENT_SECRET: optional,
+  MELHORENVIO_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
+  /** Obrigatório pelo Melhor Envio: "Nome da aplicação (email de contato técnico)". */
+  MELHORENVIO_USER_AGENT: optional,
+  /** Implantação de demonstração: aviso fixo no site e bloqueio de indexação. */
+  DEMO_MODE: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
 });
 
 export type ServerEnv = z.infer<typeof schema>;

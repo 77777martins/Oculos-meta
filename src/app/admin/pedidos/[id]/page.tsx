@@ -8,7 +8,7 @@ import { formatBRL } from "@/lib/money";
 import { formatCpf, formatDateTime, formatZip } from "@/lib/utils";
 import { idSchema } from "@/lib/validation/common";
 import { AdminHeader, Panel } from "@/components/admin/ui";
-import { OrderStatusForm, PaymentActions, ShipmentEventForm, ShipmentForm } from "@/components/admin/order-actions";
+import { OrderStatusForm, PaymentActions, ShipmentEventForm, ShipmentForm, SyncTrackingButton } from "@/components/admin/order-actions";
 import { OrderStatusBadge, PaymentStatusBadge, ShipmentStatusBadge } from "@/components/ui/status-badge";
 import { ORDER_STATUS_LABELS } from "@/server/services/order-state";
 import type { ShippingAddressSnapshot } from "@/server/services/orders";
@@ -58,6 +58,7 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ id:
               ))}
             </ul>
             <dl className="mt-4 space-y-1 border-t border-slate-100 pt-4 text-sm">
+              {order.shippingProvider === "MELHOR_ENVIO" && <p className="pb-1 text-xs text-brand-700">Frete cotado via Melhor Envio (serviço {order.shippingServiceId}) — compre a etiqueta com este serviço.</p>}
               <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatBRL(order.subtotalCents)}</dd></div>
               <div className="flex justify-between"><dt>Desconto {order.couponCode && `(${order.couponCode})`}</dt><dd>− {formatBRL(order.discountCents)}</dd></div>
               <div className="flex justify-between"><dt>Frete ({order.shippingCarrier} {order.shippingService})</dt><dd>{formatBRL(order.shippingCents)}</dd></div>
@@ -118,6 +119,17 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ id:
               <p className="mb-4 flex items-center gap-2 text-sm">
                 Código <span className="font-mono font-semibold">{order.shipment.trackingCode ?? "—"}</span> <ShipmentStatusBadge status={order.shipment.status} />
               </p>
+            )}
+            {order.shipment?.trackingCode && (
+              <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-surface p-3 text-xs text-slate-600">
+                <span>
+                  Melhor Envio:{" "}
+                  {order.shipment.providerOrderId
+                    ? `vinculado · status "${order.shipment.providerStatus ?? "—"}"${order.shipment.lastSyncedAt ? ` · sincronizado ${formatDateTime(order.shipment.lastSyncedAt)}` : ""}`
+                    : "etiqueta ainda não localizada (sincronização automática a cada ~20 min)"}
+                </span>
+                {canUpdate && <SyncTrackingButton orderId={order.id} />}
+              </div>
             )}
             {canUpdate && isPaid ? (
               <div className="space-y-6">

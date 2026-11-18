@@ -9,8 +9,10 @@ import { quoteCartLines } from "./cart";
 import { checkCoupon } from "./coupons";
 import { commitReservedSale, releaseReservation, reserveStock, returnToStock, tryDirectSale, type StockLine } from "./inventory";
 import { canTransition, canTransitionManually } from "./order-state";
-import { computeTotals, shippingOptionsForZip } from "./pricing";
+import { computeTotals } from "./pricing";
 import { getStoreSettings } from "./settings";
+import { resolveShippingOption } from "./shipping";
+import { notifyOrder } from "./notifications";
 
 /** Limite de pedidos aguardando pagamento por cliente (evita travar estoque por abuso). */
 export const MAX_PENDING_ORDERS_PER_USER = 3;
@@ -19,7 +21,7 @@ export interface CreateOrderInput {
   userId: string;
   items: Array<{ variantId: string; quantity: number }>;
   address: AddressData;
-  shippingZoneId: string;
+  shippingOptionId: string;
   couponCode?: string;
   customerDocument: string;
   customerPhone: string;
@@ -49,6 +51,17 @@ export async function createOrder(input: CreateOrderInput) {
   const settings = await getStoreSettings();
   const reservationExpiresAt = new Date(Date.now() + settings.pixExpirationMinutes * 60_000);
 
+  // Frete resolvido ANTES da transação (pode envolver API externa). O preço é recalculado
+  // no servidor a partir do carrinho; dentro da transação conferimos que o carrinho não mudou.
+  const preLines = await quoteCartLines(input.items);
+  const preSubtotal = preLines.reduce((a, l) => a + l.lineTotalCents, 0);
+  const option = await resolveShippingOption(input.shippingOptionId, {
+    zipCode: input.address.zipCode,
+    subtotalCents: preSubtotal,
+    lines: preLines.map((l) => ({ variantId: l.variantId, quantity: l.quantity, unitPriceCents: l.unitPriceCents, weightGrams: l.weightGrams })),
+  });
+  if (!option) throw new ValidationError("Opção de frete indisponível para o CEP informado. Recalcule o frete.");
+
   const order = await db.$transaction(
     async (tx) => {
       const pending = await tx.order.count({ where: { userId: input.userId, status: "PENDING_PAYMENT" } });
@@ -60,20 +73,19 @@ export async function createOrder(input: CreateOrderInput) {
 
       const lines = await quoteCartLines(input.items, tx);
       if (lines.length === 0) throw new ValidationError("Seu carrinho está vazio.");
-      const problem = lines.find((l) => l.issue !== null);
-      if (problem || lines.length !== new Set(input.items.map((i) => i.variantId)).size) {
-        throw new ConflictError(
-          problem ? `"${problem.productName} — ${problem.variantName}" não possui estoque suficiente.` : "Alguns produtos não estão mais disponíveis.",
-          "CART_CHANGED",
-        );
+      // Produto removido/despublicado → o carrinho mudou.
+      if (lines.length !== new Set(input.items.map((i) => i.variantId)).size || lines.some((l) => !l.sellable)) {
+        throw new ConflictError("Alguns produtos não estão mais disponíveis. Revise o carrinho.", "CART_CHANGED");
+      }
+      // Falta de estoque tem SEMPRE o mesmo código, seja detectada aqui (outra compra reservou antes)
+      // ou na reserva atômica logo abaixo — o cliente recebe uma resposta consistente.
+      const short = lines.find((l) => l.issue !== null);
+      if (short) {
+        throw new ConflictError(`Estoque insuficiente para "${short.productName} — ${short.variantName}". Atualize o carrinho.`, "OUT_OF_STOCK", { variantId: short.variantId });
       }
 
       const subtotalCents = lines.reduce((a, l) => a + l.lineTotalCents, 0);
-
-      // Frete: a opção escolhida precisa ser válida para o CEP informado.
-      const zone = await tx.shippingZone.findUnique({ where: { id: input.shippingZoneId } });
-      const option = zone ? shippingOptionsForZip([zone], input.address.zipCode, subtotalCents)[0] : undefined;
-      if (!zone || !option) throw new ValidationError("Opção de frete indisponível para o CEP informado.");
+      if (subtotalCents !== preSubtotal) throw new ConflictError("Os valores do carrinho foram atualizados. Revise e tente novamente.", "CART_CHANGED");
 
       let coupon: Awaited<ReturnType<typeof checkCoupon>>["coupon"] = null;
       if (input.couponCode) {
@@ -113,11 +125,14 @@ export async function createOrder(input: CreateOrderInput) {
           customerDocument: input.customerDocument,
           customerPhone: input.customerPhone,
           shippingAddress: shippingAddress as unknown as Prisma.InputJsonValue,
-          shippingZoneId: zone.id,
-          shippingCarrier: zone.carrier,
-          shippingService: zone.serviceName,
-          shippingMinDays: zone.minDays,
-          shippingMaxDays: zone.maxDays,
+          shippingZoneId: option.zoneId,
+          shippingProvider: option.provider,
+          shippingServiceId: option.serviceId,
+          shippingQuote: option as unknown as Prisma.InputJsonValue,
+          shippingCarrier: option.carrier,
+          shippingService: option.serviceName,
+          shippingMinDays: option.minDays,
+          shippingMaxDays: option.maxDays,
           reservationExpiresAt,
           items: {
             create: lines.map((l) => ({
@@ -155,6 +170,7 @@ export async function createOrder(input: CreateOrderInput) {
   );
 
   logger.info("order.created", { orderId: order.id, number: order.number });
+  await notifyOrder(order.id, "CREATED");
   return order;
 }
 
@@ -209,7 +225,7 @@ async function closeUnpaidOrder(tx: Tx, orderId: string, to: "EXPIRED" | "CANCEL
 }
 
 export async function expireOrder(orderId: string): Promise<boolean> {
-  return db.$transaction(async (tx) => {
+  const expired = await db.$transaction(async (tx) => {
     const order = await tx.order.findUnique({ where: { id: orderId }, select: { reservationExpiresAt: true, status: true } });
     if (!order || order.status !== "PENDING_PAYMENT" || !order.reservationExpiresAt || order.reservationExpiresAt > new Date()) return false;
     // Pagamento em análise (ex.: cartão em revisão antifraude) não expira automaticamente.
@@ -217,6 +233,8 @@ export async function expireOrder(orderId: string): Promise<boolean> {
     if (inProcess > 0) return false;
     return closeUnpaidOrder(tx, orderId, "EXPIRED", "Prazo de pagamento expirado");
   });
+  if (expired) await notifyOrder(orderId, "EXPIRED");
+  return expired;
 }
 
 /** Pedidos de um cliente que já passaram do prazo (chamado pelo cron e sob demanda). */
@@ -232,8 +250,9 @@ export async function findExpiredPendingOrderIds(limit = 100): Promise<string[]>
 
 // ---- Ações administrativas --------------------------------------------------
 
-export async function adminUpdateOrderStatus(input: { orderId: string; to: OrderStatus; note: string | null; actorId: string; ip: string }) {
-  return db.$transaction(async (tx) => {
+/** Atualização manual (equipe) ou automática (actorId null = sistema, ex.: rastreio sincronizado). */
+export async function adminUpdateOrderStatus(input: { orderId: string; to: OrderStatus; note: string | null; actorId: string | null; ip: string | null }) {
+  await db.$transaction(async (tx) => {
     const order = await lockOrder(tx, input.orderId);
     if (!order) throw new NotFoundError("Pedido não encontrado.");
     if (!canTransitionManually(order.status, input.to)) {
@@ -274,6 +293,8 @@ export async function adminUpdateOrderStatus(input: { orderId: string; to: Order
 
     await audit({ actorId: input.actorId, action: "order.status_update", entityType: "Order", entityId: order.id, metadata: { from: order.status, to: input.to }, ip: input.ip }, tx);
   });
+  // Após a transação (inclusive quando a mudança vem da sincronização de rastreio).
+  if (input.to === "SHIPPED" || input.to === "DELIVERED" || input.to === "CANCELLED") await notifyOrder(input.orderId, input.to);
 }
 
 // ---- Leitura para o cliente (sempre filtrando por userId — anti-IDOR) ---------

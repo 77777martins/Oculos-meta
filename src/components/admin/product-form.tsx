@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/field";
@@ -53,6 +53,8 @@ export function ProductForm({ productId, initial, categories }: { productId?: st
   const specs = useFieldArray({ control: form.control, name: "specs" });
   const images = useFieldArray({ control: form.control, name: "images" });
   const { register, formState } = form;
+  // SKUs atuais (inclui variantes ainda não salvas) para vincular imagens.
+  const watchedVariants = useWatch({ control: form.control, name: "variants" }) ?? [];
 
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);
@@ -181,7 +183,7 @@ export function ProductForm({ productId, initial, categories }: { productId?: st
             </div>
           </Panel>
 
-          <Panel title="Imagens" actions={<ImageUploadButton folder="products" label="Enviar" onUploaded={(url) => images.append({ url, alt: form.getValues("name") || "Imagem do produto" })} />}>
+          <Panel title="Imagens" actions={<ImageUploadButton folder="products" label="Enviar" onUploaded={(url) => images.append({ url, alt: form.getValues("name") || "Imagem do produto", variantSku: null, credit: null, creditUrl: null, sunUrl: null })} />}>
             <p className="mb-3 text-xs text-slate-500">Use apenas imagens próprias, oficiais autorizadas ou licenciadas. A primeira é a capa.</p>
             {images.fields.length === 0 && <p className="text-sm text-slate-500">Nenhuma imagem.</p>}
             <ul className="space-y-3">
@@ -190,7 +192,26 @@ export function ProductForm({ productId, initial, categories }: { productId?: st
                   <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                     <Image src={form.getValues(`images.${i}.url`)} alt="" fill sizes="56px" className="object-cover" />
                   </div>
-                  <Input className="flex-1" aria-label="Texto alternativo" placeholder="Texto alternativo" {...register(`images.${i}.alt`)} />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Input aria-label="Texto alternativo" placeholder="Texto alternativo" {...register(`images.${i}.alt`)} />
+                    <Input aria-label="Crédito da imagem" placeholder="Crédito/licença (se exigido)" {...register(`images.${i}.credit`)} />
+                    <Input aria-label="Link da origem da imagem" placeholder="Link da origem (https://…)" {...register(`images.${i}.creditUrl`)} />
+                    <Input aria-label="Foto com a lente escurecida" placeholder="Lente que escurece: endereço da mesma foto com a lente escura (opcional)" {...register(`images.${i}.sunUrl`)} />
+                    <select
+                      aria-label="Variante desta imagem"
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700"
+                      {...register(`images.${i}.variantSku`)}
+                    >
+                      <option value="">Todas as variantes</option>
+                      {watchedVariants
+                        .filter((v) => v.sku)
+                        .map((v) => (
+                          <option key={v.sku} value={v.sku.toUpperCase()}>
+                            Só {v.name || v.sku} ({v.sku.toUpperCase()})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                   <div className="flex flex-col">
                     <button type="button" className="p-1 text-slate-500 hover:text-ink disabled:opacity-30" disabled={i === 0} onClick={() => images.move(i, i - 1)} aria-label="Mover para cima">
                       <ArrowUp className="size-4" />

@@ -58,8 +58,16 @@ export interface ShippingZoneRule {
   isActive: boolean;
 }
 
+export type ShippingProvider = "TABLE" | "MELHOR_ENVIO";
+
 export interface ShippingOption {
+  /** "zone_<id>" (tabela por CEP) ou "me_<serviceId>" (Melhor Envio). */
   id: string;
+  provider: ShippingProvider;
+  /** ID da faixa da tabela (provider TABLE). */
+  zoneId: string | null;
+  /** ID do serviço no Melhor Envio (provider MELHOR_ENVIO). */
+  serviceId: number | null;
   name: string;
   carrier: string;
   serviceName: string;
@@ -77,7 +85,10 @@ export function shippingOptionsForZip(zones: ShippingZoneRule[], zipCode: string
     .map((z) => {
       const isFree = z.freeAboveCents !== null && subtotalCents >= z.freeAboveCents;
       return {
-        id: z.id,
+        id: `zone_${z.id}`,
+        provider: "TABLE" as const,
+        zoneId: z.id,
+        serviceId: null,
         name: z.name,
         carrier: z.carrier,
         serviceName: z.serviceName,

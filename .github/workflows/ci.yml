@@ -20,7 +20,7 @@ jobs:
           POSTGRES_DB: oculos_meta_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U oculos" --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "pg_isready -U oculos -d oculos_meta_test" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://oculos:oculos_dev@localhost:5432/oculos_meta_test?schema=public
       DIRECT_URL: postgresql://oculos:oculos_dev@localhost:5432/oculos_meta_test?schema=public
@@ -28,13 +28,14 @@ jobs:
       APP_URL: http://localhost:3000
       AUTH_SECRET: ci-secret-with-at-least-32-characters-000000
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm audit --omit=dev --audit-level=high
+      # Exceções temporárias e com prazo em audit-exceptions.json (ver docs/SEGURANCA.md).
+      - run: node scripts/audit-check.mjs
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit

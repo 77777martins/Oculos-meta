@@ -27,6 +27,19 @@ export const variantSchema = z
 export const productImageSchema = z.strictObject({
   url: safeUrlSchema,
   alt: cleanText(200),
+  /** Imagem específica de uma variante (por SKU). Vazio = imagem geral do produto. */
+  variantSku: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .optional()
+    .nullable()
+    .transform((v) => v || null),
+  /** Crédito/licença da imagem (obrigatório por licenças como CC BY). */
+  credit: optionalText(300),
+  creditUrl: safeUrlSchema.optional().nullable().or(z.literal("").transform(() => null)),
+  /** Mesma foto com a lente escurecida (efeito automático de lente fotocromática). */
+  sunUrl: safeUrlSchema.optional().nullable().or(z.literal("").transform(() => null)),
 });
 
 export const productSchema = z.strictObject({
@@ -48,6 +61,9 @@ export const productSchema = z.strictObject({
     .max(50)
     .refine((vs) => new Set(vs.map((v) => v.sku)).size === vs.length, "SKUs repetidos."),
   images: z.array(productImageSchema).max(20),
+}).refine((p) => p.images.every((img) => !img.variantSku || p.variants.some((v) => v.sku === img.variantSku)), {
+  message: "Uma imagem está vinculada a um SKU que não existe neste produto.",
+  path: ["images"],
 });
 
 export const stockAdjustmentSchema = z.strictObject({
@@ -77,3 +93,27 @@ export const catalogQuerySchema = z.object({
 
 export type ProductInput = z.input<typeof productSchema>;
 export type VariantInput = z.input<typeof variantSchema>;
+
+/** Edição em massa de preço e estoque (Admin > Preços e estoque). */
+export const bulkVariantUpdateSchema = z.strictObject({
+  reason: cleanText(200, 3),
+  items: z
+    .array(
+      z
+        .strictObject({
+          variantId: idSchema,
+          priceCents: centsSchema.min(1, "Preço obrigatório."),
+          salePriceCents: centsSchema.min(1).nullable(),
+          /** Estoque físico desejado: vira um ajuste no livro-razão (diferença para o atual). */
+          stock: z.number().int().min(0).max(100_000),
+          /** Variante à venda na loja (desativada some da vitrine; nada é apagado). */
+          isActive: z.boolean(),
+        })
+        .refine((v) => v.salePriceCents == null || v.salePriceCents < v.priceCents, {
+          message: "O preço promocional deve ser menor que o preço normal.",
+          path: ["salePriceCents"],
+        }),
+    )
+    .min(1)
+    .max(500),
+});

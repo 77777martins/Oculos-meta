@@ -81,6 +81,26 @@ O workflow **"Cron — expirar pedidos"** passa a rodar a cada 10 min automatica
 3. **Produtos**: cadastre com dados oficiais e imagens autorizadas; estoque inicial; publique.
 4. Domínio próprio (opcional): Vercel → *Settings → Domains* → siga o DNS → atualize `APP_URL` na Vercel e no secret do GitHub, a URL do webhook no Mercado Pago → *Redeploy*.
 
+## Passo 8.1 — Melhor Envio (opcional: frete real + rastreio automático)
+1. Teste primeiro no **sandbox**: crie conta em https://sandbox.melhorenvio.com.br e um aplicativo em https://app-sandbox.melhorenvio.com.br/integracoes/area-dev
+   - Callback: `APP_URL/api/integrations/melhor-envio/callback` (idêntica, sem barra no final)
+2. Vercel → variáveis: `MELHORENVIO_CLIENT_ID`, `MELHORENVIO_CLIENT_SECRET`, `MELHORENVIO_ENV=sandbox`,
+   `MELHORENVIO_USER_AGENT="Nome da Loja (seu-email-tecnico@dominio.com)"` (exigido pela API) → *Redeploy*.
+3. Admin → Configurações → **Conectar Melhor Envio** → autorize. Informe o **CEP de origem** e as dimensões da embalagem → marque "Usar cotação em tempo real" → Salvar.
+4. O checkout passa a mostrar os preços reais; a tabela por CEP continua como reserva se a API falhar.
+5. **Etiquetas**: compre no painel do Melhor Envio usando o serviço indicado no pedido; depois informe o **código de rastreio** no pedido (Admin). O status é sincronizado automaticamente a cada ~20 min (ou pelo botão "Sincronizar").
+6. Para produção: crie o app no painel real (https://app.melhorenvio.com.br/integracoes/area-dev), troque as variáveis e `MELHORENVIO_ENV=production` → Redeploy → **Conectar** novamente.
+
+> ⚖️ **Nota fiscal**: a documentação do Melhor Envio informa que envios **comerciais** exigem nota fiscal; a Declaração de Conteúdo (envio "não comercial") é permitida apenas para pessoas físicas e PJs não contribuintes do ICMS. Vendas recorrentes de uma loja são comerciais. Consulte um contador sobre a formalização (ex.: MEI) antes de operar em escala.
+
+## Passo 8.2 — Sentry (opcional: monitoramento de erros)
+1. https://sentry.io → crie um projeto **Next.js** → copie o **DSN**.
+2. Em *Project Settings → Security & Privacy*, ative **"Prevent Storing of IP Addresses"** (LGPD).
+3. Vercel → variáveis: `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT=production`.
+   Opcional (stack traces legíveis): `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (token de *Organization Auth Tokens*; segredo de build).
+4. *Redeploy* (variáveis `NEXT_PUBLIC_*` são aplicadas no build).
+5. A loja já envia ao Sentry: erros de páginas, de rotas de API e alertas críticos (ex.: `payment.duplicate_approved`), **sem IP, cookies, cabeçalhos, corpos ou parâmetros de URL**.
+
 ## Passo 9 — Teste completo (modo teste do Mercado Pago)
 - [ ] Criar conta de cliente, comprar, pagar com **cartão de teste** (nome do titular `APRO` aprova, `OTHE` recusa, `CONT` fica pendente) → pedido "Pagamento aprovado" + e-mail
 - [ ] Novo pedido com **PIX** (no modo teste o PIX não é pago de verdade; valide geração do QR e copia e cola)
@@ -96,6 +116,7 @@ O workflow **"Cron — expirar pedidos"** passa a rodar a cada 10 min automatica
 ---
 
 ## Operação contínua
+- **Erros**: Sentry (se configurado) recebe automaticamente todo `logger.error`. Configure alertas por e-mail no projeto.
 - **Logs**: Vercel → *Logs* (JSON estruturado). Procure por `payment.amount_mismatch`, `payment.duplicate_approved`, `payment.approved_without_stock`, `webhook.mercadopago.invalid_signature`.
 - **Backup**: Neon mantém histórico (PITR) conforme o plano; teste uma restauração em branch de banco.
 - **Rollback**: Vercel → *Deployments* → versão anterior → *Instant Rollback*. Migrações são só aditivas por padrão; antes de uma migração destrutiva, crie um branch/snapshot do banco no Neon.

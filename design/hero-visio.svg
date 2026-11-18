@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <defs>
+    <radialGradient id="bg" cx="0.62" cy="0.38" r="0.85">
+      <stop offset="0" stop-color="#2a4ef0"/>
+      <stop offset="0.45" stop-color="#132778"/>
+      <stop offset="1" stop-color="#070d26"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6d93ff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#6d93ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3247"/>
+      <stop offset="0.35" stop-color="#0d1120"/>
+      <stop offset="1" stop-color="#05070f"/>
+    </linearGradient>
+    <linearGradient id="lens" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9fbcff"/>
+      <stop offset="0.35" stop-color="#3559e8"/>
+      <stop offset="0.75" stop-color="#0f1d63"/>
+      <stop offset="1" stop-color="#4a6ff2"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-60%" y="-300%" width="220%" height="700%"><feGaussianBlur stdDeviation="28"/></filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+    <clipPath id="lensL"><path d="M410 462 Q 410 446 430 446 L 728 446 Q 748 446 746 466 L 732 610 Q 724 690 660 698 L 512 698 Q 446 692 434 628 Z"/></clipPath>
+  </defs>
+
+  <rect width="1600" height="1200" fill="url(#bg)"/>
+  <!-- grade sutil -->
+  <g stroke="#ffffff" stroke-opacity="0.045" stroke-width="1">
+    <path d="M0 200H1600M0 400H1600M0 600H1600M0 800H1600M0 1000H1600"/>
+    <path d="M200 0V1200M400 0V1200M600 0V1200M800 0V1200M1000 0V1200M1200 0V1200M1400 0V1200"/>
+  </g>
+  <!-- arcos de luz -->
+  <g fill="none" stroke="#9fbcff" stroke-linecap="round">
+    <circle cx="800" cy="600" r="430" stroke-opacity="0.10" stroke-width="2"/>
+    <circle cx="800" cy="600" r="520" stroke-opacity="0.07" stroke-width="2" stroke-dasharray="4 18"/>
+    <path d="M430 300 A430 430 0 0 1 1170 300" stroke-opacity="0.45" stroke-width="3"/>
+    <path d="M1230 640 A430 430 0 0 1 1060 950" stroke-opacity="0.3" stroke-width="3"/>
+  </g>
+  <ellipse cx="800" cy="600" rx="520" ry="300" fill="url(#halo)"/>
+
+  <!-- sombra -->
+  <ellipse cx="800" cy="840" rx="420" ry="34" fill="#000" opacity="0.5" filter="url(#soft)"/>
+
+  <!-- hastes -->
+  <path d="M372 470 C 290 455, 215 455, 150 495" fill="none" stroke="url(#frame)" stroke-width="30" stroke-linecap="round"/>
+  <path d="M1228 470 C 1310 455, 1385 455, 1450 495" fill="none" stroke="url(#frame)" stroke-width="30" stroke-linecap="round"/>
+
+  <!-- ondas sonoras (áudio aberto) -->
+  <g fill="none" stroke="#bfd3fe" stroke-linecap="round" stroke-width="5">
+    <path d="M232 560 q -22 30 0 60" stroke-opacity="0.85"/>
+    <path d="M200 540 q -38 50 0 100" stroke-opacity="0.55"/>
+    <path d="M168 520 q -54 70 0 140" stroke-opacity="0.3"/>
+    <path d="M1368 560 q 22 30 0 60" stroke-opacity="0.85"/>
+    <path d="M1400 540 q 38 50 0 100" stroke-opacity="0.55"/>
+    <path d="M1432 520 q 54 70 0 140" stroke-opacity="0.3"/>
+  </g>
+
+  <!-- armação Wayfarer: aro esquerdo + espelho, ponte no centro -->
+  <g id="rim">
+    <path d="M362 452 Q 362 412 408 410 L 748 410 Q 790 412 788 452 L 772 618 Q 760 722 668 736 L 502 736 Q 410 728 392 640 Z" fill="url(#frame)"/>
+    <path d="M410 462 Q 410 446 430 446 L 728 446 Q 748 446 746 466 L 732 610 Q 724 690 660 698 L 512 698 Q 446 692 434 628 Z" fill="url(#lens)"/>
+    <g clip-path="url(#lensL)">
+      <path d="M455 760 L630 420 L690 420 L515 760Z" fill="url(#shine)" opacity="0.6"/>
+      <path d="M548 760 L700 440 L724 440 L572 760Z" fill="#fff" opacity="0.18"/>
+    </g>
+    <path d="M420 426 H740" stroke="#fff" stroke-opacity="0.32" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <use href="#rim" transform="translate(1600 0) scale(-1 1)"/>
+  <!-- ponte -->
+  <path d="M782 440 Q 800 428 818 440 L 818 486 Q 800 474 782 486 Z" fill="url(#frame)"/>
+
+  <!-- câmera e LED -->
+  <circle cx="404" cy="440" r="14" fill="#0b1437" stroke="#3a4360" stroke-width="4"/>
+  <circle cx="404" cy="440" r="5.5" fill="#6d93ff"/>
+  <circle cx="1196" cy="440" r="12" fill="#e0e9ff" filter="url(#glow)"/>
+  <circle cx="1196" cy="440" r="5.5" fill="#ffffff"/>
+
+  <!-- partículas -->
+  <g fill="#dbe6fe">
+    <path d="M1290 300 l6 14 14 6 -14 6 -6 14 -6 -14 -14 -6 14 -6z" opacity="0.9"/>
+    <path d="M330 860 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z" opacity="0.7"/>
+    <circle cx="1330" cy="880" r="4" opacity="0.6"/>
+    <circle cx="260" cy="330" r="3" opacity="0.5"/>
+    <circle cx="1120" cy="250" r="3" opacity="0.5"/>
+  </g>
+</svg>

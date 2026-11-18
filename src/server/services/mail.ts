@@ -70,6 +70,68 @@ export function passwordResetEmail(name: string, link: string): Omit<MailMessage
   };
 }
 
+function button(link: string, label: string): string {
+  return `<p style="text-align:center;margin:32px 0"><a href="${escapeHtml(link)}" style="background:#1d4ed8;color:#fff;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:bold">${escapeHtml(label)}</a></p>`;
+}
+
+export function orderCreatedEmail(name: string, orderNumber: number, total: string, payLink: string, expiresAt: string | null): Omit<MailMessage, "to"> {
+  const deadline = expiresAt ? ` até ${expiresAt}` : "";
+  return {
+    subject: `Recebemos seu pedido #${orderNumber}`,
+    text: `Olá, ${name}.\n\nRecebemos o pedido #${orderNumber} (total ${total}). Conclua o pagamento${deadline} para garantir os itens: ${payLink}`,
+    html: layout(
+      `Pedido #${orderNumber} recebido`,
+      `<p>Olá, ${escapeHtml(name)}.</p><p>Recebemos seu pedido <strong>#${orderNumber}</strong> no valor de <strong>${escapeHtml(total)}</strong>. Os itens estão reservados para você — conclua o pagamento${escapeHtml(deadline)}.</p>${button(payLink, "Pagar agora")}`,
+    ),
+  };
+}
+
+export function orderShippedEmail(name: string, orderNumber: number, link: string, tracking: { code: string | null; url: string | null; carrier: string | null }): Omit<MailMessage, "to"> {
+  const code = tracking.code ? `Código de rastreio: ${tracking.code}${tracking.carrier ? ` (${tracking.carrier})` : ""}` : "";
+  return {
+    subject: `Seu pedido #${orderNumber} foi enviado`,
+    text: `Olá, ${name}.\n\nSeu pedido #${orderNumber} foi enviado. ${code}\n${tracking.url ?? link}`,
+    html: layout(
+      `Pedido #${orderNumber} a caminho`,
+      `<p>Olá, ${escapeHtml(name)}.</p><p>Boa notícia: seu pedido <strong>#${orderNumber}</strong> foi enviado!</p>${code ? `<p style="font-family:monospace;background:#f1f5f9;padding:12px;border-radius:8px">${escapeHtml(code)}</p>` : ""}${button(tracking.url ?? link, "Acompanhar entrega")}`,
+    ),
+  };
+}
+
+export function orderDeliveredEmail(name: string, orderNumber: number, link: string): Omit<MailMessage, "to"> {
+  return {
+    subject: `Pedido #${orderNumber} entregue`,
+    text: `Olá, ${name}.\n\nO pedido #${orderNumber} consta como entregue. Algum problema? Fale conosco: ${link}`,
+    html: layout(
+      `Pedido #${orderNumber} entregue`,
+      `<p>Olá, ${escapeHtml(name)}.</p><p>Seu pedido <strong>#${orderNumber}</strong> consta como entregue. Esperamos que aproveite! Se algo não estiver certo, responda pela página do pedido.</p>${button(link, "Ver pedido")}`,
+    ),
+  };
+}
+
+export function orderClosedEmail(name: string, orderNumber: number, reason: "EXPIRED" | "CANCELLED", link: string): Omit<MailMessage, "to"> {
+  const why = reason === "EXPIRED" ? "o prazo para pagamento terminou e a reserva dos itens foi liberada" : "ele foi cancelado";
+  return {
+    subject: `Pedido #${orderNumber} ${reason === "EXPIRED" ? "expirado" : "cancelado"}`,
+    text: `Olá, ${name}.\n\nO pedido #${orderNumber} não foi concluído: ${why}. Nenhum valor foi cobrado. Se quiser, faça um novo pedido: ${link}`,
+    html: layout(
+      `Pedido #${orderNumber} não concluído`,
+      `<p>Olá, ${escapeHtml(name)}.</p><p>O pedido <strong>#${orderNumber}</strong> não foi concluído: ${escapeHtml(why)}. Nenhum valor foi cobrado.</p>${button(link, "Ver produtos")}`,
+    ),
+  };
+}
+
+export function orderRefundedEmail(name: string, orderNumber: number, amount: string, link: string): Omit<MailMessage, "to"> {
+  return {
+    subject: `Reembolso do pedido #${orderNumber}`,
+    text: `Olá, ${name}.\n\nProcessamos o reembolso de ${amount} do pedido #${orderNumber}. O prazo para aparecer depende do meio de pagamento (PIX: imediato; cartão: até 2 faturas). ${link}`,
+    html: layout(
+      `Reembolso do pedido #${orderNumber}`,
+      `<p>Olá, ${escapeHtml(name)}.</p><p>Processamos o reembolso de <strong>${escapeHtml(amount)}</strong> referente ao pedido <strong>#${orderNumber}</strong>.</p><p style="color:#64748b;font-size:13px">O prazo para o valor aparecer depende do meio de pagamento: PIX costuma ser imediato; no cartão pode levar até 2 faturas.</p>${button(link, "Ver pedido")}`,
+    ),
+  };
+}
+
 export function orderPaidEmail(name: string, orderNumber: number, link: string): Omit<MailMessage, "to"> {
   return {
     subject: `Pagamento aprovado — pedido #${orderNumber}`,

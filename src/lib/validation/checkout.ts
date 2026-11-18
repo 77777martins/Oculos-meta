@@ -32,7 +32,8 @@ export const checkoutSchema = z.strictObject({
   address: addressSchema.optional(),
   saveAddress: z.boolean().optional().default(true),
   couponCode: couponCodeSchema.optional(),
-  shippingZoneId: idSchema,
+  /** "zone_<id>" (tabela) ou "me_<serviço>" (Melhor Envio) — o preço é recalculado no servidor. */
+  shippingOptionId: z.string().regex(/^(zone_[a-z0-9]{20,32}|me_\d{1,6})$/, "Opção de frete inválida."),
   customerDocument: cpfSchema,
   customerPhone: phoneSchema,
 }).refine((v) => Boolean(v.addressId) !== Boolean(v.address), { message: "Selecione ou informe um endereço de entrega.", path: ["address"] });

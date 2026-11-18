@@ -45,6 +45,7 @@ export async function saveProduct(id: string | null, data: ProductData, actorId:
       // Variantes
       const ownIds = new Set(current?.variants.map((v) => v.id) ?? []);
       const keptIds = new Set<string>();
+      const idBySku = new Map<string, string>();
       for (const [index, v] of data.variants.entries()) {
         const variantFields = {
           sku: v.sku,
@@ -64,9 +65,11 @@ export async function saveProduct(id: string | null, data: ProductData, actorId:
           if (!ownIds.has(v.id)) throw new ValidationError("Variante inválida.");
           await tx.productVariant.update({ where: { id: v.id }, data: variantFields });
           keptIds.add(v.id);
+          idBySku.set(v.sku, v.id);
         } else {
           const created = await tx.productVariant.create({ data: { ...variantFields, productId: product.id } });
           keptIds.add(created.id);
+          idBySku.set(v.sku, created.id);
           if (v.initialStock && v.initialStock > 0) await adjustStock(tx, created.id, v.initialStock, "Estoque inicial", actorId);
         }
       }
@@ -83,7 +86,19 @@ export async function saveProduct(id: string | null, data: ProductData, actorId:
       // Imagens (substitui na ordem informada)
       await tx.productImage.deleteMany({ where: { productId: product.id } });
       if (data.images.length) {
-        await tx.productImage.createMany({ data: data.images.map((img, i) => ({ productId: product.id, url: img.url, alt: img.alt, sortOrder: i })) });
+        await tx.productImage.createMany({
+          data: data.images.map((img, i) => ({
+            productId: product.id,
+            // SKU → ID resolvido aqui (variantes novas só ganham ID dentro desta transação).
+            variantId: img.variantSku ? (idBySku.get(img.variantSku) ?? null) : null,
+            url: img.url,
+            alt: img.alt,
+            credit: img.credit,
+            creditUrl: img.creditUrl ?? null,
+            sunUrl: img.sunUrl ?? null,
+            sortOrder: i,
+          })),
+        });
       }
       return { id: product.id };
     });

@@ -2,6 +2,8 @@
  * Cria (ou promove) o administrador inicial.
  * Uso: ADMIN_EMAIL=... ADMIN_NAME=... ADMIN_PASSWORD=... npm run admin:create
  * A senha nunca é impressa e deve seguir a política (10+ caracteres, maiúsc., minúsc., números).
+ * Com --if-missing (usado no build da Vercel), não faz nada se já existir algum ADMIN —
+ * assim novos deploys nunca redefinem a senha nem derrubam sessões.
  */
 import { PrismaClient } from "@prisma/client";
 import { hash } from "@node-rs/argon2";
@@ -18,6 +20,10 @@ async function main() {
 
   const db = new PrismaClient();
   try {
+    if (process.argv.includes("--if-missing") && (await db.user.count({ where: { role: "ADMIN", anonymizedAt: null } })) > 0) {
+      console.log("Administrador já existe — nada a fazer.");
+      return;
+    }
     const passwordHash = await hash(password.data, ARGON2_OPTIONS);
     const user = await db.user.upsert({
       where: { email: email.data },

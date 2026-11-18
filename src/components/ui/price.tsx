@@ -9,11 +9,11 @@ export function Price({ cents, listCents, size = "md", className }: { cents: num
       <span className={cn("font-semibold tracking-tight text-ink", size === "lg" ? "text-3xl" : size === "md" ? "text-lg" : "text-base")}>{formatBRL(cents)}</span>
       {onSale && (
         <>
-          <span className="text-sm text-slate-400 line-through">
+          <span className="text-sm text-slate-500 line-through">
             <span className="sr-only">De </span>
             {formatBRL(listCents)}
           </span>
-          <span className="text-xs font-semibold text-emerald-600">-{pct}%</span>
+          <span className="text-xs font-semibold text-emerald-700">-{pct}%</span>
         </>
       )}
     </div>

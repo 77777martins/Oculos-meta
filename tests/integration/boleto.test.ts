@@ -22,7 +22,7 @@ async function enableBoleto(days = 2) {
 
 async function pendingOrder(stock = 5) {
   const [user, product, zone] = await Promise.all([createUser(), createProduct({ stock, priceCents: 300_00 }), createShippingZone(10_00)]);
-  const order = await createOrder({ userId: user.id, items: [{ variantId: product.variants[0]!.id, quantity: 1 }], address: validAddress, shippingZoneId: zone.id, customerDocument: VALID_CPF, customerPhone: "11999999999" });
+  const order = await createOrder({ userId: user.id, items: [{ variantId: product.variants[0]!.id, quantity: 1 }], address: validAddress, shippingOptionId: `zone_${zone.id}`, customerDocument: VALID_CPF, customerPhone: "11999999999" });
   return { user, variant: product.variants[0]!, order };
 }
 
