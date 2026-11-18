@@ -10,7 +10,7 @@ describe("edição em massa de preço e estoque", () => {
   it("atualiza preço e transforma estoque em movimento do livro-razão", async () => {
     const [admin, product] = await Promise.all([createUser({ role: "ADMIN" }), createProduct({ stock: 5, priceCents: 300_00 })]);
     const v = product.variants[0]!;
-    const res = await bulkUpdateVariants({ reason: "Preços reais", items: [{ variantId: v.id, priceCents: 329_900, salePriceCents: 299_900, stock: 12 }] }, admin.id, "127.0.0.1");
+    const res = await bulkUpdateVariants({ reason: "Preços reais", items: [{ variantId: v.id, priceCents: 329_900, salePriceCents: 299_900, stock: 12, isActive: true }] }, admin.id, "127.0.0.1");
     expect(res.changed).toBe(1);
     const after = await db.productVariant.findUniqueOrThrow({ where: { id: v.id } });
     expect(after).toMatchObject({ priceCents: 329_900, salePriceCents: 299_900, stock: 12 });
@@ -22,7 +22,7 @@ describe("edição em massa de preço e estoque", () => {
   it("linhas sem mudança são ignoradas", async () => {
     const [admin, product] = await Promise.all([createUser({ role: "ADMIN" }), createProduct({ stock: 5, priceCents: 300_00 })]);
     const v = product.variants[0]!;
-    const res = await bulkUpdateVariants({ reason: "Nada", items: [{ variantId: v.id, priceCents: v.priceCents, salePriceCents: v.salePriceCents, stock: v.stock }] }, admin.id, "127.0.0.1");
+    const res = await bulkUpdateVariants({ reason: "Nada", items: [{ variantId: v.id, priceCents: v.priceCents, salePriceCents: v.salePriceCents, stock: v.stock, isActive: v.isActive }] }, admin.id, "127.0.0.1");
     expect(res.changed).toBe(0);
   });
 
@@ -34,8 +34,8 @@ describe("edição em massa de preço e estoque", () => {
         {
           reason: "Teste",
           items: [
-            { variantId: a.variants[0]!.id, priceCents: 999_00, salePriceCents: null, stock: 50 },
-            { variantId: b.variants[0]!.id, priceCents: 300_00, salePriceCents: null, stock: 1 },
+            { variantId: a.variants[0]!.id, priceCents: 999_00, salePriceCents: null, stock: 50, isActive: true },
+            { variantId: b.variants[0]!.id, priceCents: 300_00, salePriceCents: null, stock: 1, isActive: true },
           ],
         },
         admin.id,
@@ -47,11 +47,11 @@ describe("edição em massa de preço e estoque", () => {
 
   it("variante inexistente → nada é salvo", async () => {
     const admin = await createUser({ role: "ADMIN" });
-    await expect(bulkUpdateVariants({ reason: "x x x", items: [{ variantId: "ckv1234567890abcdefghij", priceCents: 100, salePriceCents: null, stock: 1 }] }, admin.id, "1.1.1.1")).rejects.toMatchObject({ status: 404 });
+    await expect(bulkUpdateVariants({ reason: "x x x", items: [{ variantId: "ckv1234567890abcdefghij", priceCents: 100, salePriceCents: null, stock: 1, isActive: true }] }, admin.id, "1.1.1.1")).rejects.toMatchObject({ status: 404 });
   });
 
   it("validação: promoção maior que o preço, estoque negativo e campos extras", () => {
-    const item = { variantId: "ckv1234567890abcdefghij", priceCents: 100_00, salePriceCents: null, stock: 1 };
+    const item = { variantId: "ckv1234567890abcdefghij", priceCents: 100_00, salePriceCents: null, stock: 1, isActive: true };
     expect(bulkVariantUpdateSchema.safeParse({ reason: "ok ok", items: [item] }).success).toBe(true);
     expect(bulkVariantUpdateSchema.safeParse({ reason: "ok ok", items: [{ ...item, salePriceCents: 200_00 }] }).success).toBe(false);
     expect(bulkVariantUpdateSchema.safeParse({ reason: "ok ok", items: [{ ...item, stock: -1 }] }).success).toBe(false);

@@ -106,6 +106,8 @@ export const bulkVariantUpdateSchema = z.strictObject({
           salePriceCents: centsSchema.min(1).nullable(),
           /** Estoque físico desejado: vira um ajuste no livro-razão (diferença para o atual). */
           stock: z.number().int().min(0).max(100_000),
+          /** Variante à venda na loja (desativada some da vitrine; nada é apagado). */
+          isActive: z.boolean(),
         })
         .refine((v) => v.salePriceCents == null || v.salePriceCents < v.priceCents, {
           message: "O preço promocional deve ser menor que o preço normal.",

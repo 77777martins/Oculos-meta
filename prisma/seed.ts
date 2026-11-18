@@ -7,6 +7,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { createHash } from "node:crypto";
+import { MAX_TEST_PRICE_CENTS, VARIANT_UPDATES } from "./variant-updates";
 import { CATALOG_CONTENT, DEMO_PLACEHOLDER_PREFIX, LEGACY_DEMO_MODELS, LEGACY_DEMO_NAMES, PREVIOUS_SEEDED_DESCRIPTION_HASHES } from "./catalog-content";
 
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
@@ -60,7 +61,7 @@ async function demo() {
       categoryId: rb.id,
       isFeatured: true,
       variants: [
-        { sku: "DEMO-RBW-PRETO", name: "Preto brilhante", color: "Preto", colorHex: "#111111", priceCents: 299900, salePriceCents: 279900, stock: 12 },
+        { sku: "META-WAY-01", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 27990, salePriceCents: null, stock: 7 },
         { sku: "DEMO-RBW-AZUL", name: "Azul brilhante", color: "Azul", colorHex: "#1e2a5a", priceCents: 299900, salePriceCents: null, stock: 4 },
         { sku: "DEMO-RBW-FOSCO", name: "Preto fosco · lente polarizada", color: "Preto fosco", colorHex: "#2b2b2b", priceCents: 319900, salePriceCents: null, stock: 5 },
       ],
@@ -71,7 +72,7 @@ async function demo() {
       model: "Skyler",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-RBS-PRETO", name: "Preto", color: "Preto", colorHex: "#1f2937", priceCents: 319900, salePriceCents: null, stock: 6 }],
+      variants: [{ sku: "META-SKY-01", name: "Preto", color: "Preto", colorHex: "#1f2937", priceCents: 29990, salePriceCents: null, stock: 3 }],
     },
     {
       slug: "demo-oakley-meta-hstn",
@@ -97,7 +98,7 @@ async function demo() {
       model: "Gatinho",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-RBG-PRETO", name: "Preto brilhante", color: "Preto", colorHex: "#111111", priceCents: 319900, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "META-ZEN-01", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 26990, salePriceCents: null, stock: 5 }],
     },
     {
       // Nome do modelo ainda não confirmado pelo lojista (não está legível nas fotos).
@@ -106,7 +107,7 @@ async function demo() {
       model: "Retangular",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-RBR-TRANSLUCIDO", name: "Preto translúcido · lente transparente", color: "Preto translúcido", colorHex: "#2a2a2a", priceCents: 349900, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "META-RET-01", name: "Preto", color: "Preto", colorHex: "#2a2a2a", priceCents: 14990, salePriceCents: null, stock: 12 }],
     },
     {
       slug: "demo-ray-ban-meta-clubmaster",
@@ -114,7 +115,7 @@ async function demo() {
       model: "Clubmaster",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-RBC-PRETO", name: "Preto e dourado", color: "Preto", colorHex: "#111111", priceCents: 329900, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "META-CLB-01", name: "Preto/Dourado", color: "Preto/Dourado", colorHex: "#111111", priceCents: 24990, salePriceCents: null, stock: 8 }],
     },
     {
       slug: "demo-meta-capri",
@@ -258,7 +259,7 @@ function gallery(file: string, label: string, sku: string, views: View[] = ALL_V
  */
 const DEMO_IMAGES: Record<string, DemoImage[]> = {
   "demo-ray-ban-meta-wayfarer": [
-    ...sunGallery("ray-ban-meta-wayfarer-preto", "Ray-Ban Meta Wayfarer preto brilhante", "DEMO-RBW-PRETO"),
+    ...sunGallery("ray-ban-meta-wayfarer-preto", "Ray-Ban Meta Wayfarer preto brilhante", "META-WAY-01"),
     ...sunGallery("ray-ban-meta-wayfarer-azul", "Ray-Ban Meta Wayfarer azul brilhante", "DEMO-RBW-AZUL"),
     ...gallery("ray-ban-meta-wayfarer-fosco", "Ray-Ban Meta Wayfarer preto fosco", "DEMO-RBW-FOSCO"),
   ],
@@ -267,8 +268,8 @@ const DEMO_IMAGES: Record<string, DemoImage[]> = {
     ...gallery("meta-adventurer-cinza", "Meta Adventurer cinza translúcido com lente rosa", "DEMO-MAD-CINZA"),
   ],
   "demo-ray-ban-meta-piloto": sunGallery("ray-ban-meta-piloto-tartaruga", "Ray-Ban Meta Piloto tartaruga", "DEMO-RBP-TARTARUGA"),
-  "demo-ray-ban-meta-skyler": gallery("ray-ban-meta-skyler-preto", "Ray-Ban Meta Skyler preto com lente verde", "DEMO-RBS-PRETO"),
-  "demo-ray-ban-meta-gatinho": sunGallery("ray-ban-meta-gatinho-preto", "Ray-Ban Meta Gatinho preto brilhante", "DEMO-RBG-PRETO"),
+  "demo-ray-ban-meta-skyler": gallery("ray-ban-meta-skyler-preto", "Ray-Ban Meta Skyler preto com lente verde", "META-SKY-01"),
+  "demo-ray-ban-meta-gatinho": sunGallery("ray-ban-meta-gatinho-preto", "Ray-Ban Meta Gatinho preto brilhante", "META-ZEN-01"),
   "demo-oakley-meta-hstn": [
     {
       url: `${IMG}/oakley-meta-hstn-preto-lente-clara.webp`,
@@ -281,8 +282,8 @@ const DEMO_IMAGES: Record<string, DemoImage[]> = {
     { url: `${IMG}/oakley-meta-hstn-preto-costas.webp`, alt: "Oakley Meta HSTN preto fosco — vista traseira", variantSku: "DEMO-OKH-PRETO" },
     { url: `${IMG}/oakley-meta-hstn-preto-caixa.webp`, alt: "Oakley Meta HSTN preto fosco — conteúdo da embalagem", variantSku: "DEMO-OKH-PRETO" },
   ],
-  "demo-ray-ban-meta-retangular": gallery("ray-ban-meta-retangular-preto-translucido", "Ray-Ban Meta Retangular preto translúcido", "DEMO-RBR-TRANSLUCIDO"),
-  "demo-ray-ban-meta-clubmaster": sunGallery("ray-ban-meta-clubmaster-preto", "Ray-Ban Meta Clubmaster preto e dourado", "DEMO-RBC-PRETO"),
+  "demo-ray-ban-meta-retangular": gallery("ray-ban-meta-retangular-preto-translucido", "Ray-Ban Meta Retangular preto translúcido", "META-RET-01"),
+  "demo-ray-ban-meta-clubmaster": sunGallery("ray-ban-meta-clubmaster-preto", "Ray-Ban Meta Clubmaster preto e dourado", "META-CLB-01"),
   "demo-meta-capri": [
     ...gallery("meta-capri-tartaruga", "Meta Capri tartaruga com lente transparente", "DEMO-MCP-TARTARUGA", ["lateral-esquerda", "frente", "lateral-direita", "caixa"]),
     ...gallery("meta-capri-cinza", "Meta Capri cinza translúcido com lente escura", "DEMO-MCP-CINZA", ["lateral-esquerda", "frente", "lateral-direita", "caixa"]),
@@ -354,11 +355,43 @@ async function syncCatalogContent() {
   }
 }
 
+/**
+ * Aplica prisma/variant-updates.ts às variantes que já existem no banco (uma única vez:
+ * depois disso o SKU antigo não existe mais). Mesma linha da variante — mesmo ID, fotos,
+ * pedidos e histórico. O estoque nunca é sobrescrito: a diferença vira movimento no
+ * livro-razão; se houver unidades reservadas acima do alvo, o estoque fica no mínimo possível.
+ */
+async function applyVariantUpdates() {
+  for (const u of VARIANT_UPDATES) {
+    if (u.priceCents > MAX_TEST_PRICE_CENTS) throw new Error(`${u.sku}: preço acima de R$ 300,00.`);
+    const variant = await db.productVariant.findUnique({ where: { sku: u.fromSku }, select: { id: true, stock: true, reserved: true } });
+    if (!variant) continue;
+    if (await db.productVariant.findUnique({ where: { sku: u.sku }, select: { id: true } })) {
+      throw new Error(`SKU ${u.sku} já existe em outra variante: atualização interrompida para não duplicar.`);
+    }
+    const target = Math.max(u.stock, variant.reserved);
+    const delta = target - variant.stock;
+    await db.$transaction(async (tx) => {
+      await tx.productVariant.update({
+        where: { id: variant.id },
+        data: { sku: u.sku, name: u.name, color: u.color, lens: u.lens, priceCents: u.priceCents, salePriceCents: null, stock: target },
+      });
+      if (delta !== 0) {
+        await tx.inventoryMovement.create({
+          data: { variantId: variant.id, type: delta > 0 ? "RESTOCK" : "ADJUSTMENT", quantity: delta, reason: `[DEMO] Catálogo 18/11: ${u.fromSku} → ${u.sku} (estoque de teste)` },
+        });
+      }
+    });
+    if (target !== u.stock) console.warn(`${u.sku}: estoque ficou em ${target} (há ${variant.reserved} unidades reservadas).`);
+  }
+}
+
 async function main() {
   await base();
   if (process.env.SEED_DEMO === "true") {
     // Em produção, só em implantação explicitamente marcada como demonstração (exibe aviso no site).
     if (process.env.NODE_ENV === "production" && process.env.DEMO_MODE !== "true") throw new Error("Dados de demonstração exigem DEMO_MODE=true em produção.");
+    await applyVariantUpdates();
     await demo();
     await syncDemoImages();
     await syncCatalogContent();

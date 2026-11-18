@@ -263,7 +263,7 @@ A geração deste modelo ainda está sendo confirmada. Resolução de vídeo, ba
 
   "demo-ray-ban-meta-wayfarer": {
     name: "[DEMO] Ray-Ban Meta Wayfarer",
-    shortDescription: "O ícone Wayfarer com câmera, áudio open-ear e Meta AI. Disponível em preto brilhante, azul brilhante e preto fosco." + DEMO_NOTE,
+    shortDescription: "O ícone Wayfarer com câmera, áudio open-ear e Meta AI. Disponível em preto, azul brilhante e preto fosco." + DEMO_NOTE,
     description: `O formato mais reconhecido da Ray-Ban, com armação robusta e visual clássico, agora com tecnologia inteligente: registre o que você vê, ouça músicas e fale com a Meta AI sem pegar o celular.
 
 ## Diferenciais
@@ -273,7 +273,7 @@ A geração deste modelo ainda está sendo confirmada. Resolução de vídeo, ba
 - Comandos de voz e controles por toque.
 
 ## Cores e lentes
-- Preto brilhante: lente fotocromática, clara em ambientes internos e escura sob o sol.
+- Preto: lente fotocromática, clara em ambientes internos e escura sob o sol.
 - Azul brilhante: lente fotocromática, clara em ambientes internos e escura sob o sol.
 - Preto fosco: lente polarizada (identificada pelo "P" gravado na lente).
 - Opções de lentes solares e de grau.
@@ -282,7 +282,7 @@ A geração deste modelo ainda está sendo confirmada. Resolução de vídeo, ba
 A geração deste modelo ainda está sendo confirmada. Resolução de vídeo, bateria e armazenamento serão informados após a confirmação.`,
     specs: [
       s("Formato da armação", "Wayfarer (quadrado/trapezoidal)"),
-      s("Cores", "Preto brilhante, azul brilhante e preto fosco"),
+      s("Cores", "Preto, azul brilhante e preto fosco"),
       s("Lentes", "Fotocromáticas (preto e azul brilhante); polarizada (preto fosco)"),
       s("Câmera", "Integrada, para fotos e vídeos"),
       s("Assistente", "Meta AI"),
@@ -294,7 +294,7 @@ A geração deste modelo ainda está sendo confirmada. Resolução de vídeo, ba
       s("Lentes de grau", "Opções solares e de grau"),
     ],
     seoTitle: "Ray-Ban Meta Wayfarer",
-    seoDescription: "Ray-Ban Meta Wayfarer com câmera, áudio open-ear e Meta AI, em preto brilhante, azul brilhante e preto fosco polarizado.",
+    seoDescription: "Ray-Ban Meta Wayfarer com câmera, áudio open-ear e Meta AI, em preto, azul brilhante e preto fosco polarizado.",
     pending: "Geração do Wayfarer não confirmada: números de vídeo, bateria e armazenamento não publicados.",
   },
 
@@ -476,6 +476,7 @@ export const PREVIOUS_SEEDED_DESCRIPTION_HASHES = new Set([
   "9040f71eb70f15d6128ea4ff3a43041c878f0a91b285875a71a36a3b154ccf29", // retangular v1
   "4ba6e0cb86aa4592afc06558f3b56cd47edf9e6dbf095001c9e97adc44cfb74b", // gatinho v1
   "bceb7f8913a2cb9bfe6ac1d47b29b53a16ecef1257905ff07472d0f0e509b8ff", // piloto v1
+  "b3785390a9cf94bdb91b3fbc9c4c4f226c0f76d63ddbcce3a3170353e0b7d76d", // wayfarer v1 (cor "Preto brilhante" → "Preto")
 ]);
 
 /** Nomes que o seed já usou: o nome só é trocado se ainda for um destes (nunca sobrescreve edição do painel). */

@@ -64,3 +64,23 @@ Passo a passo em `docs/DEPLOY.md` e `docs/PAGAMENTOS.md`.
 - Busca do nome "Visio" no INPI (classes 9 e 35).
 - 2FA na conta da Vercel.
 - Orientação contábil sobre venda sem CNPJ/nota fiscal.
+
+## Cores da lista de 18/11/2026 ainda não cadastradas
+Preços e quantidades são **fictícios** (teste), todos até R$ 300,00. Detalhes em `prisma/variant-updates.ts`.
+
+Cadastradas (cores com foto): META-CLB-01, META-RET-01, META-ZEN-01, META-SKY-01, META-WAY-01.
+
+Aguardando foto da cor (não criadas para não vender cor sem foto):
+| SKU | Produto | Cor | Preço | Qtd |
+|---|---|---|---|---|
+| META-CLB-02 | Audio Clubmaster | Tartaruga/Dourado | R$ 279,90 | 4 |
+| META-RET-02 | Blayzer Optics | Transparente | R$ 179,90 | 5 |
+| META-PIL-01 | Aviator | Preto | R$ 169,90 | 9 |
+| META-PIL-02 | Aviator | Prata | R$ 199,90 | 2 |
+| META-ZEN-02 | Zena | Marrom | R$ 289,90 | 4 |
+| META-SKY-02 | Skyler | Caramelo | R$ 299,90 | 2 |
+| META-WAY-02 | Wayfarer | Tartaruga | R$ 299,90 | 4 |
+
+Descartadas por decisão do lojista: META-GAT-01 e META-GAT-02 ("Gatinho" é o mesmo produto que o Zena).
+
+Cor da lente pendente de confirmação: META-CLB-01, META-ZEN-01, META-SKY-01, META-WAY-01 (filtro "Lente pendente" em Admin → Preços e estoque).
