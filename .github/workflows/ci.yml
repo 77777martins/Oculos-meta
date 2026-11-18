@@ -34,7 +34,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm audit --omit=dev --audit-level=high
+      # Exceções temporárias e com prazo em audit-exceptions.json (ver docs/SEGURANCA.md).
+      - run: node scripts/audit-check.mjs
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit

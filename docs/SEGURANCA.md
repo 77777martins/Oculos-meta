@@ -37,3 +37,13 @@
 - Revisão jurídica dos textos legais e definição de DPO.
 - Emissão de nota fiscal não está integrada: a loja opera sem CNPJ (decisão do responsável). Envios comerciais exigem NF (ver `docs/DEPLOY.md`, Passo 8.1) — consultar contador.
 - Rate limit "fail-open" se o banco estiver indisponível (a loja também estaria).
+
+## Auditoria de dependências
+O CI roda `npm run audit:check` (`scripts/audit-check.mjs`): falha com qualquer alerta **alto ou crítico**
+nas dependências de produção, exceto os listados em `audit-exceptions.json`. Cada exceção precisa de
+justificativa, de quem aprovou e de **data de validade**; vencida, o CI volta a falhar.
+
+Exceção ativa:
+- **GHSA-fc5q-39xc-vjpf (picomatch)**, até 18/12/2026, aprovada pelo lojista em 18/11/2026. Sem versão
+  corrigida publicada; vem só de ferramentas de build do Sentry. Uma tarefa diária verifica a correção;
+  quando ela sair, a dependência é atualizada e a exceção removida.
