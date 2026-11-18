@@ -18,7 +18,8 @@ export interface VariantUpdate {
   stock: number;
 }
 
-export const MAX_TEST_PRICE_CENTS = 300_00;
+/** Teto de preço do catálogo de teste definido pelo lojista em 18/11/2026. */
+export const MAX_TEST_PRICE_CENTS = 299_90;
 
 export const VARIANT_UPDATES: VariantUpdate[] = [
   { fromSku: "DEMO-RBC-PRETO", sku: "META-CLB-01", name: "Preto/Dourado", color: "Preto/Dourado", lens: null, priceCents: 249_90, stock: 8 },
@@ -41,3 +42,30 @@ export const PENDING_VARIANTS = [
 
 /** Linhas descartadas por decisão do lojista: "Gatinho" e "Zena" são o mesmo produto (vale META-ZEN). */
 export const DISCARDED_SKUS = ["META-GAT-01", "META-GAT-02"] as const;
+
+/**
+ * Catálogo final de teste (18/11/2026, 2ª lista do lojista): TODAS as variantes cadastradas
+ * com preço até R$ 299,90 e 50 unidades por cor. Valores fictícios para simulação.
+ * Aplicado uma única vez (marca na auditoria), para não sobrescrever edições posteriores do painel.
+ */
+export const FINAL_CATALOG_MARKER = "catalog.final_test_2026_11_18";
+export const FINAL_STOCK_PER_VARIANT = 50;
+
+export const FINAL_PRICES_CENTS: Record<string, number> = {
+  "META-CLB-01": 249_90, // Audio Clubmaster Preto/Dourado (mantido)
+  "META-RET-01": 149_90, // Blayzer Optics Preto (mantido)
+  "META-ZEN-01": 269_90, // Zena Preto (mantido)
+  "META-SKY-01": 299_90, // Skyler Preto (mantido)
+  "META-WAY-01": 279_90, // Wayfarer Preto (mantido)
+  "DEMO-RBW-AZUL": 289_90, // Wayfarer Azul brilhante
+  "DEMO-RBW-FOSCO": 299_90, // Wayfarer Preto fosco · polarizada
+  "DEMO-RBP-TARTARUGA": 259_90, // Aviator Havana
+  "DEMO-MCP-TARTARUGA": 219_90, // Capri Tartaruga
+  "DEMO-MCP-CINZA": 229_90, // Capri Cinza translúcido
+  "DEMO-MFY-PRETO": 239_90, // Fury Preto
+  "DEMO-MSF-PRETO": 249_90, // Starfire Preto
+  "DEMO-MAD-PRETO": 199_90, // Adventurer Preto
+  "DEMO-MAD-CINZA": 209_90, // Adventurer Cinza translúcido
+  "DEMO-OKV-PRETO": 299_90, // Oakley Meta Vanguard
+  "DEMO-OKH-PRETO": 269_90, // Oakley Meta HSTN
+};

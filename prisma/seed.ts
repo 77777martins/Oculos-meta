@@ -7,7 +7,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { createHash } from "node:crypto";
-import { MAX_TEST_PRICE_CENTS, VARIANT_UPDATES } from "./variant-updates";
+import { FINAL_CATALOG_MARKER, FINAL_PRICES_CENTS, FINAL_STOCK_PER_VARIANT, MAX_TEST_PRICE_CENTS, VARIANT_UPDATES } from "./variant-updates";
 import { CATALOG_CONTENT, DEMO_PLACEHOLDER_PREFIX, LEGACY_DEMO_MODELS, LEGACY_DEMO_NAMES, PREVIOUS_SEEDED_DESCRIPTION_HASHES } from "./catalog-content";
 
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
@@ -61,9 +61,9 @@ async function demo() {
       categoryId: rb.id,
       isFeatured: true,
       variants: [
-        { sku: "META-WAY-01", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 27990, salePriceCents: null, stock: 7 },
-        { sku: "DEMO-RBW-AZUL", name: "Azul brilhante", color: "Azul", colorHex: "#1e2a5a", priceCents: 299900, salePriceCents: null, stock: 4 },
-        { sku: "DEMO-RBW-FOSCO", name: "Preto fosco · lente polarizada", color: "Preto fosco", colorHex: "#2b2b2b", priceCents: 319900, salePriceCents: null, stock: 5 },
+        { sku: "META-WAY-01", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 27990, salePriceCents: null, stock: 50 },
+        { sku: "DEMO-RBW-AZUL", name: "Azul brilhante", color: "Azul", colorHex: "#1e2a5a", priceCents: 28990, salePriceCents: null, stock: 50 },
+        { sku: "DEMO-RBW-FOSCO", name: "Preto fosco · lente polarizada", color: "Preto fosco", colorHex: "#2b2b2b", priceCents: 29990, salePriceCents: null, stock: 50 },
       ],
     },
     {
@@ -72,7 +72,7 @@ async function demo() {
       model: "Skyler",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "META-SKY-01", name: "Preto", color: "Preto", colorHex: "#1f2937", priceCents: 29990, salePriceCents: null, stock: 3 }],
+      variants: [{ sku: "META-SKY-01", name: "Preto", color: "Preto", colorHex: "#1f2937", priceCents: 29990, salePriceCents: null, stock: 50 }],
     },
     {
       slug: "demo-oakley-meta-hstn",
@@ -80,7 +80,7 @@ async function demo() {
       model: "HSTN",
       categoryId: ok.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-OKH-PRETO", name: "Preto fosco", color: "Preto", colorHex: "#0f172a", priceCents: 349900, salePriceCents: null, stock: 2 }],
+      variants: [{ sku: "DEMO-OKH-PRETO", name: "Preto fosco", color: "Preto", colorHex: "#0f172a", priceCents: 26990, salePriceCents: null, stock: 50 }],
     },
     {
       // Nome do modelo ainda não confirmado pelo lojista (não está legível nas fotos).
@@ -89,7 +89,7 @@ async function demo() {
       model: "Piloto",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-RBP-TARTARUGA", name: "Tartaruga · lente marrom", color: "Tartaruga", colorHex: "#5b4226", priceCents: 319900, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "DEMO-RBP-TARTARUGA", name: "Havana", color: "Havana", colorHex: "#5b4226", priceCents: 25990, salePriceCents: null, stock: 50 }],
     },
     {
       // Nome do modelo ainda não confirmado pelo lojista (não está legível nas fotos).
@@ -98,7 +98,7 @@ async function demo() {
       model: "Gatinho",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "META-ZEN-01", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 26990, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "META-ZEN-01", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 26990, salePriceCents: null, stock: 50 }],
     },
     {
       // Nome do modelo ainda não confirmado pelo lojista (não está legível nas fotos).
@@ -107,7 +107,7 @@ async function demo() {
       model: "Retangular",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "META-RET-01", name: "Preto", color: "Preto", colorHex: "#2a2a2a", priceCents: 14990, salePriceCents: null, stock: 12 }],
+      variants: [{ sku: "META-RET-01", name: "Preto", color: "Preto", colorHex: "#2a2a2a", priceCents: 14990, salePriceCents: null, stock: 50 }],
     },
     {
       slug: "demo-ray-ban-meta-clubmaster",
@@ -115,7 +115,7 @@ async function demo() {
       model: "Clubmaster",
       categoryId: rb.id,
       isFeatured: true,
-      variants: [{ sku: "META-CLB-01", name: "Preto/Dourado", color: "Preto/Dourado", colorHex: "#111111", priceCents: 24990, salePriceCents: null, stock: 8 }],
+      variants: [{ sku: "META-CLB-01", name: "Preto/Dourado", color: "Preto/Dourado", colorHex: "#111111", priceCents: 24990, salePriceCents: null, stock: 50 }],
     },
     {
       slug: "demo-meta-capri",
@@ -124,8 +124,8 @@ async function demo() {
       categoryId: mg.id,
       isFeatured: true,
       variants: [
-        { sku: "DEMO-MCP-TARTARUGA", name: "Tartaruga · lente transparente", color: "Tartaruga", colorHex: "#6b4a2b", priceCents: 329900, salePriceCents: null, stock: 5 },
-        { sku: "DEMO-MCP-CINZA", name: "Cinza translúcido · lente escura", color: "Cinza", colorHex: "#4a4a4a", priceCents: 339900, salePriceCents: null, stock: 5 },
+        { sku: "DEMO-MCP-TARTARUGA", name: "Tartaruga · lente transparente", color: "Tartaruga", colorHex: "#6b4a2b", priceCents: 21990, salePriceCents: null, stock: 50 },
+        { sku: "DEMO-MCP-CINZA", name: "Cinza translúcido · lente escura", color: "Cinza", colorHex: "#4a4a4a", priceCents: 22990, salePriceCents: null, stock: 50 },
       ],
     },
     {
@@ -134,7 +134,7 @@ async function demo() {
       model: "Vanguard",
       categoryId: ok.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-OKV-PRETO", name: "Preto · lente dourada", color: "Preto", colorHex: "#1a1a1a", priceCents: 389900, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "DEMO-OKV-PRETO", name: "Preto · lente dourada", color: "Preto", colorHex: "#1a1a1a", priceCents: 29990, salePriceCents: null, stock: 50 }],
     },
     {
       slug: "demo-meta-fury",
@@ -142,7 +142,7 @@ async function demo() {
       model: "Fury",
       categoryId: mg.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-MFY-PRETO", name: "Preto · lente marrom degradê", color: "Preto", colorHex: "#111111", priceCents: 339900, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "DEMO-MFY-PRETO", name: "Preto · lente marrom degradê", color: "Preto", colorHex: "#111111", priceCents: 23990, salePriceCents: null, stock: 50 }],
     },
     {
       slug: "demo-meta-adventurer",
@@ -151,8 +151,8 @@ async function demo() {
       categoryId: mg.id,
       isFeatured: true,
       variants: [
-        { sku: "DEMO-MAD-PRETO", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 329900, salePriceCents: null, stock: 5 },
-        { sku: "DEMO-MAD-CINZA", name: "Cinza translúcido · lente rosa", color: "Cinza", colorHex: "#6b6b6b", priceCents: 339900, salePriceCents: null, stock: 5 },
+        { sku: "DEMO-MAD-PRETO", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 19990, salePriceCents: null, stock: 50 },
+        { sku: "DEMO-MAD-CINZA", name: "Cinza translúcido · lente rosa", color: "Cinza", colorHex: "#6b6b6b", priceCents: 20990, salePriceCents: null, stock: 50 },
       ],
     },
     {
@@ -161,7 +161,7 @@ async function demo() {
       model: "Starfire",
       categoryId: mg.id,
       isFeatured: true,
-      variants: [{ sku: "DEMO-MSF-PRETO", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 339900, salePriceCents: null, stock: 5 }],
+      variants: [{ sku: "DEMO-MSF-PRETO", name: "Preto", color: "Preto", colorHex: "#111111", priceCents: 24990, salePriceCents: null, stock: 50 }],
     },
   ];
 
@@ -386,6 +386,37 @@ async function applyVariantUpdates() {
   }
 }
 
+/**
+ * Catálogo final de teste: preço da tabela FINAL_PRICES_CENTS (até R$ 299,90, sem promoção) e
+ * 50 unidades físicas por cor. Uma única vez (marca na auditoria). Estoque nunca é sobrescrito
+ * às cegas: a diferença vira movimento no livro-razão, reservas de pedidos em aberto continuam
+ * dentro do estoque (disponível = 50 − reservado) e nada fica negativo.
+ */
+async function applyFinalCatalog() {
+  // Aviator: a cor confirmada pelo lojista é Havana (lentes Transparentes/Marrom Transitions).
+  await db.productVariant.updateMany({
+    where: { sku: "DEMO-RBP-TARTARUGA", name: "Tartaruga · lente marrom" },
+    data: { name: "Havana", color: "Havana", lens: "Transparentes/Marrom Transitions" },
+  });
+  if (await db.auditLog.findFirst({ where: { action: FINAL_CATALOG_MARKER }, select: { id: true } })) return;
+  const variants = await db.productVariant.findMany({ where: { product: { deletedAt: null } }, select: { id: true, sku: true, stock: true, reserved: true } });
+  const missing = variants.filter((v) => FINAL_PRICES_CENTS[v.sku] === undefined).map((v) => v.sku);
+  if (missing.length > 0) throw new Error(`Catálogo final: sem preço definido para ${missing.join(", ")}.`);
+  await db.$transaction(async (tx) => {
+    for (const v of variants) {
+      const priceCents = FINAL_PRICES_CENTS[v.sku]!;
+      if (priceCents > MAX_TEST_PRICE_CENTS) throw new Error(`${v.sku}: preço acima de R$ 299,90.`);
+      const target = Math.max(FINAL_STOCK_PER_VARIANT, v.reserved);
+      const delta = target - v.stock;
+      await tx.productVariant.update({ where: { id: v.id }, data: { priceCents, salePriceCents: null, stock: target } });
+      if (delta !== 0) {
+        await tx.inventoryMovement.create({ data: { variantId: v.id, type: delta > 0 ? "RESTOCK" : "ADJUSTMENT", quantity: delta, reason: "[DEMO] Catálogo final de teste 18/11: 50 unidades por cor" } });
+      }
+    }
+    await tx.auditLog.create({ data: { action: FINAL_CATALOG_MARKER, entityType: "Catalog", metadata: { variants: variants.length, stockPerVariant: FINAL_STOCK_PER_VARIANT, maxPriceCents: MAX_TEST_PRICE_CENTS } } });
+  });
+}
+
 async function main() {
   await base();
   if (process.env.SEED_DEMO === "true") {
@@ -395,6 +426,7 @@ async function main() {
     await demo();
     await syncDemoImages();
     await syncCatalogContent();
+    await applyFinalCatalog();
     console.log("Seed base + DEMONSTRAÇÃO concluído.");
   } else {
     console.log("Seed base concluído (use SEED_DEMO=true para dados de demonstração em desenvolvimento).");
