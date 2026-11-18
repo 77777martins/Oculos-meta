@@ -43,7 +43,7 @@ O CI roda `npm run audit:check` (`scripts/audit-check.mjs`): falha com qualquer 
 nas dependências de produção, exceto os listados em `audit-exceptions.json`. Cada exceção precisa de
 justificativa, de quem aprovou e de **data de validade**; vencida, o CI volta a falhar.
 
-Exceção ativa:
-- **GHSA-fc5q-39xc-vjpf (picomatch)**, até 18/12/2026, aprovada pelo lojista em 18/11/2026. Sem versão
-  corrigida publicada; vem só de ferramentas de build do Sentry. Uma tarefa diária verifica a correção;
-  quando ela sair, a dependência é atualizada e a exceção removida.
+Exceções ativas: nenhuma.
+
+Histórico: GHSA-fc5q-39xc-vjpf (picomatch) teve exceção de 18/11/2026, removida no mesmo dia porque o
+alerta deixou de constar na base de alertas do npm para a versão usada (4.0.7).

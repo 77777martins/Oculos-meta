@@ -1,12 +1,4 @@
 {
   "$comment": "Exceções TEMPORÁRIAS da auditoria de dependências (npm audit). Cada uma exige justificativa e data de validade; vencida, o CI volta a falhar. Remova a entrada assim que existir correção.",
-  "exceptions": [
-    {
-      "advisory": "GHSA-fc5q-39xc-vjpf",
-      "package": "picomatch",
-      "reason": "ReDoS em extglobs. Todas as versões publicadas (<= 4.0.7) são afetadas e não há correção. Chega só por dependências de build do @sentry/nextjs (rollup, vite, tinyglobby), que casam padrões de arquivo da configuração; nenhuma entrada de usuário chega ao picomatch em tempo de execução. A única correção automática rebaixa o Sentry 3 versões major.",
-      "approvedBy": "lojista, em 18/11/2026",
-      "expires": "2026-12-18"
-    }
-  ]
+  "exceptions": []
 }
